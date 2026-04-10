@@ -1,0 +1,229 @@
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { AdminLayout } from "@/components/layout/admin-layout";
+import { 
+  useGetAllTokens, 
+  useVerifyToken, 
+  useApproveToken, 
+  useDistributeToken,
+  getGetAllTokensQueryKey,
+  getGetAdminDashboardStatsQueryKey,
+  getGetRecentActivityQueryKey
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, MoreVertical, CheckCircle2, Package, Shield, ExternalLink, Loader2 } from "lucide-react";
+import { Empty } from "@/components/ui/empty";
+
+const StatusBadge = ({ status }: { status: string }) => {
+  switch (status) {
+    case "pending":
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</Badge>;
+    case "verified":
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400">Verified</Badge>;
+    case "approved":
+      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400">Approved</Badge>;
+    case "distributed":
+      return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400">Distributed</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+};
+
+export default function AdminTokens() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Params matching the OpenAPI spec enum
+  const queryParams = {
+    ...(statusFilter !== "all" && { status: statusFilter as any }),
+    ...(search && { search })
+  };
+
+  const { data: tokens, isLoading } = useGetAllTokens(queryParams);
+  
+  const verifyMutation = useVerifyToken();
+  const approveMutation = useApproveToken();
+  const distributeMutation = useDistributeToken();
+
+  const handleAction = (action: 'verify' | 'approve' | 'distribute', id: number) => {
+    const mutation = action === 'verify' ? verifyMutation : action === 'approve' ? approveMutation : distributeMutation;
+    
+    mutation.mutate(
+      { tokenId: id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetAllTokensQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetAdminDashboardStatsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetRecentActivityQueryKey() });
+          toast({ title: `Token marked as ${action}d successfully` });
+        },
+        onError: (err: any) => {
+          toast({ 
+            title: `Failed to ${action} token`, 
+            description: err.message, 
+            variant: "destructive" 
+          });
+        }
+      }
+    );
+  };
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-1">Token Management</h1>
+            <p className="text-muted-foreground">View, approve and distribute rations to citizens.</p>
+          </div>
+          
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search tokens or cards..."
+                className="pl-8 bg-card"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <Card>
+          <div className="border-b px-4 py-2 bg-muted/20">
+            <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
+              <TabsList className="bg-transparent h-auto p-0 flex space-x-2">
+                <TabsTrigger value="all" className="data-[state=active]:bg-background border px-4 py-2">All Tokens</TabsTrigger>
+                <TabsTrigger value="pending" className="data-[state=active]:bg-background border px-4 py-2">Pending</TabsTrigger>
+                <TabsTrigger value="verified" className="data-[state=active]:bg-background border px-4 py-2">Verified</TabsTrigger>
+                <TabsTrigger value="approved" className="data-[state=active]:bg-background border px-4 py-2">Approved</TabsTrigger>
+                <TabsTrigger value="distributed" className="data-[state=active]:bg-background border px-4 py-2">Distributed</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-8 flex justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : !tokens || tokens.length === 0 ? (
+              <div className="py-12">
+                <Empty
+                  icon={<Shield className="h-12 w-12 text-muted-foreground/50" />}
+                  title="No tokens found"
+                  description={search ? "Try adjusting your search criteria" : "There are no tokens matching this status"}
+                />
+              </div>
+            ) : (
+              <div className="relative overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                      <TableHead className="font-semibold text-foreground">Token Number</TableHead>
+                      <TableHead className="font-semibold text-foreground">Ration Card</TableHead>
+                      <TableHead className="font-semibold text-foreground">Holder</TableHead>
+                      <TableHead className="font-semibold text-foreground">Members</TableHead>
+                      <TableHead className="font-semibold text-foreground">Date</TableHead>
+                      <TableHead className="font-semibold text-foreground">Status</TableHead>
+                      <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tokens.map((token) => (
+                      <TableRow key={token.id}>
+                        <TableCell className="font-mono text-xs font-semibold">
+                          {token.tokenNumber}
+                        </TableCell>
+                        <TableCell>{token.rationCardNumber}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{token.holderName}</div>
+                          <div className="text-xs text-muted-foreground">{token.userEmail}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="font-normal">
+                            {token.selectedMembers.length} selected
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {format(new Date(token.createdAt), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={token.status} />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              
+                              {token.status === "pending" && (
+                                <DropdownMenuItem onClick={() => handleAction('verify', token.id)}>
+                                  <Shield className="mr-2 h-4 w-4" /> Verify Internally
+                                </DropdownMenuItem>
+                              )}
+                              
+                              {(token.status === "pending" || token.status === "verified") && (
+                                <DropdownMenuItem onClick={() => handleAction('approve', token.id)}>
+                                  <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" /> Approve Token
+                                </DropdownMenuItem>
+                              )}
+                              
+                              {token.status === "approved" && (
+                                <DropdownMenuItem onClick={() => handleAction('distribute', token.id)}>
+                                  <Package className="mr-2 h-4 w-4 text-purple-600" /> Mark Distributed
+                                </DropdownMenuItem>
+                              )}
+                              
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem>
+                                <ExternalLink className="mr-2 h-4 w-4" /> View Full Details
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </AdminLayout>
+  );
+}

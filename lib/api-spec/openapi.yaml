@@ -3,20 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: E-Ration Token System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: user
+    description: User operations
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +30,346 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/admin/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Admin login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current logged in user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /ration-cards/verify:
+    post:
+      operationId: verifyRationCard
+      tags: [user]
+      summary: Verify ration card and get family members
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyRationCardBody"
+      responses:
+        "200":
+          description: Ration card details with family members
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RationCardDetails"
+        "404":
+          description: Ration card not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /verification/send-otp:
+    post:
+      operationId: sendOtp
+      tags: [user]
+      summary: Send OTP for Aadhaar verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOtpBody"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /verification/verify-otp:
+    post:
+      operationId: verifyOtp
+      tags: [user]
+      summary: Verify OTP for Aadhaar verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpBody"
+      responses:
+        "200":
+          description: Verification successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerificationResult"
+        "400":
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /verification/face:
+    post:
+      operationId: verifyFace
+      tags: [user]
+      summary: Face recognition verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FaceVerificationBody"
+      responses:
+        "200":
+          description: Face verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerificationResult"
+
+  /tokens/generate:
+    post:
+      operationId: generateToken
+      tags: [user]
+      summary: Generate a ration token after verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateTokenBody"
+      responses:
+        "201":
+          description: Token generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RationToken"
+
+  /tokens/my-tokens:
+    get:
+      operationId: getMyTokens
+      tags: [user]
+      summary: Get current user's tokens
+      responses:
+        "200":
+          description: User's tokens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RationToken"
+
+  /admin/tokens:
+    get:
+      operationId: getAllTokens
+      tags: [admin]
+      summary: Get all tokens (admin)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, verified, approved, distributed]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: All tokens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminTokenView"
+
+  /admin/tokens/{tokenId}/verify:
+    post:
+      operationId: verifyToken
+      tags: [admin]
+      summary: Verify a token (admin)
+      parameters:
+        - name: tokenId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Token verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTokenView"
+
+  /admin/tokens/{tokenId}/approve:
+    post:
+      operationId: approveToken
+      tags: [admin]
+      summary: Approve ration distribution (admin)
+      parameters:
+        - name: tokenId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Token approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTokenView"
+
+  /admin/tokens/{tokenId}/distribute:
+    post:
+      operationId: distributeToken
+      tags: [admin]
+      summary: Mark token as distributed (admin)
+      parameters:
+        - name: tokenId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Token distributed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTokenView"
+
+  /admin/dashboard-stats:
+    get:
+      operationId: getAdminDashboardStats
+      tags: [admin]
+      summary: Get dashboard statistics for admin
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /admin/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [admin]
+      summary: Get recent token activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +380,318 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    RegisterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+      required:
+        - name
+        - address
+        - email
+        - password
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserProfile"
+        message:
+          type: string
+      required:
+        - user
+        - message
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+      required:
+        - id
+        - name
+        - email
+        - address
+        - role
+
+    VerifyRationCardBody:
+      type: object
+      properties:
+        rationCardNumber:
+          type: string
+      required:
+        - rationCardNumber
+
+    RationCardDetails:
+      type: object
+      properties:
+        rationCardNumber:
+          type: string
+        holderName:
+          type: string
+        cardType:
+          type: string
+          enum: [BPL, APL, AAY, PHH]
+        familyMembers:
+          type: array
+          items:
+            $ref: "#/components/schemas/FamilyMember"
+      required:
+        - rationCardNumber
+        - holderName
+        - cardType
+        - familyMembers
+
+    FamilyMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        aadhaarLast4:
+          type: string
+        age:
+          type: integer
+        relation:
+          type: string
+      required:
+        - id
+        - name
+        - aadhaarLast4
+        - age
+        - relation
+
+    SendOtpBody:
+      type: object
+      properties:
+        aadhaarNumber:
+          type: string
+        rationCardNumber:
+          type: string
+      required:
+        - aadhaarNumber
+        - rationCardNumber
+
+    VerifyOtpBody:
+      type: object
+      properties:
+        aadhaarNumber:
+          type: string
+        otp:
+          type: string
+        rationCardNumber:
+          type: string
+      required:
+        - aadhaarNumber
+        - otp
+        - rationCardNumber
+
+    FaceVerificationBody:
+      type: object
+      properties:
+        rationCardNumber:
+          type: string
+        memberName:
+          type: string
+        faceData:
+          type: string
+      required:
+        - rationCardNumber
+        - memberName
+        - faceData
+
+    VerificationResult:
+      type: object
+      properties:
+        verified:
+          type: boolean
+        message:
+          type: string
+      required:
+        - verified
+        - message
+
+    GenerateTokenBody:
+      type: object
+      properties:
+        rationCardNumber:
+          type: string
+        selectedMembers:
+          type: array
+          items:
+            type: string
+        verificationType:
+          type: string
+          enum: [face, otp]
+      required:
+        - rationCardNumber
+        - selectedMembers
+        - verificationType
+
+    RationToken:
+      type: object
+      properties:
+        id:
+          type: integer
+        tokenNumber:
+          type: string
+        rationCardNumber:
+          type: string
+        holderName:
+          type: string
+        selectedMembers:
+          type: array
+          items:
+            type: string
+        verificationType:
+          type: string
+        status:
+          type: string
+          enum: [pending, verified, approved, distributed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - tokenNumber
+        - rationCardNumber
+        - holderName
+        - selectedMembers
+        - verificationType
+        - status
+        - createdAt
+
+    AdminTokenView:
+      type: object
+      properties:
+        id:
+          type: integer
+        tokenNumber:
+          type: string
+        rationCardNumber:
+          type: string
+        holderName:
+          type: string
+        userName:
+          type: string
+        userEmail:
+          type: string
+        selectedMembers:
+          type: array
+          items:
+            type: string
+        verificationType:
+          type: string
+        status:
+          type: string
+          enum: [pending, verified, approved, distributed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - tokenNumber
+        - rationCardNumber
+        - holderName
+        - userName
+        - userEmail
+        - selectedMembers
+        - verificationType
+        - status
+        - createdAt
+
+    DashboardStats:
+      type: object
+      properties:
+        totalTokens:
+          type: integer
+        pendingTokens:
+          type: integer
+        verifiedTokens:
+          type: integer
+        approvedTokens:
+          type: integer
+        distributedTokens:
+          type: integer
+        todayTokens:
+          type: integer
+      required:
+        - totalTokens
+        - pendingTokens
+        - verifiedTokens
+        - approvedTokens
+        - distributedTokens
+        - todayTokens
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        tokenNumber:
+          type: string
+        action:
+          type: string
+        userName:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - id
+        - tokenNumber
+        - action
+        - userName
+        - timestamp

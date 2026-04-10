@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "E-Ration Token System"
+version = "1.0.0"
+id = "artifacts/e-ration"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24563
+
+[services.development]
+run = "pnpm --filter @workspace/e-ration run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/e-ration", "run", "build" ]
+publicDir = "artifacts/e-ration/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24563"
+BASE_PATH = "/"
