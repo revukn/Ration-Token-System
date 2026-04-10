@@ -114,6 +114,19 @@ export default function AdminLogin() {
             </Form>
           </CardContent>
         </Card>
+        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 text-sm">
+          <p className="text-slate-300 font-semibold mb-2 text-center">Admin Login Credentials</p>
+          <div className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Email:</span>
+              <span className="text-primary font-mono font-medium">rationadmin@karnataka.gov.in</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Password:</span>
+              <span className="text-primary font-mono font-medium">Ration@2024</span>
+            </div>
+          </div>
+        </div>
         <div className="text-center text-slate-400 text-xs flex flex-col gap-1">
           <span>Karnataka State Government E-Ration Administration</span>
           <span className="opacity-50">Secure System Access Only</span>
