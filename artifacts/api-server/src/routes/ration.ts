@@ -6,33 +6,35 @@ const router: IRouter = Router();
 const SAMPLE_RATION_CARDS: Record<string, any> = {
   "KA-BNG-2024-001": {
     rationCardNumber: "KA-BNG-2024-001",
-    holderName: "Rajesh Kumar",
+    holderName: "Revanna",
     cardType: "BPL",
     familyMembers: [
-      { id: 1, name: "Rajesh Kumar", aadhaarLast4: "4523", age: 45, relation: "Self" },
-      { id: 2, name: "Sunita Kumar", aadhaarLast4: "7891", age: 40, relation: "Wife" },
-      { id: 3, name: "Amit Kumar", aadhaarLast4: "3456", age: 18, relation: "Son" },
-      { id: 4, name: "Priya Kumar", aadhaarLast4: "6789", age: 15, relation: "Daughter" },
+      { id: 1, name: "Revanna", aadhaarLast4: "4523", age: 48, relation: "Self" },
+      { id: 2, name: "Jayanthi Revanna", aadhaarLast4: "7891", age: 43, relation: "Wife" },
+      { id: 3, name: "Suresh Revanna", aadhaarLast4: "3456", age: 22, relation: "Son" },
+      { id: 4, name: "Geetha Revanna", aadhaarLast4: "6789", age: 18, relation: "Daughter" },
     ],
   },
   "KA-BNG-2024-002": {
     rationCardNumber: "KA-BNG-2024-002",
-    holderName: "Lakshmi Devi",
+    holderName: "Jayanth",
     cardType: "AAY",
     familyMembers: [
-      { id: 5, name: "Lakshmi Devi", aadhaarLast4: "1234", age: 55, relation: "Self" },
-      { id: 6, name: "Venkatesh", aadhaarLast4: "5678", age: 58, relation: "Husband" },
-      { id: 7, name: "Suresh", aadhaarLast4: "9012", age: 28, relation: "Son" },
+      { id: 5, name: "Jayanth", aadhaarLast4: "1234", age: 40, relation: "Self" },
+      { id: 6, name: "Savitha Jayanth", aadhaarLast4: "5678", age: 37, relation: "Wife" },
+      { id: 7, name: "Rahul Jayanth", aadhaarLast4: "9012", age: 15, relation: "Son" },
+      { id: 8, name: "Divya Jayanth", aadhaarLast4: "3344", age: 12, relation: "Daughter" },
     ],
   },
   "KA-MYS-2024-003": {
     rationCardNumber: "KA-MYS-2024-003",
-    holderName: "Manjunath Gowda",
+    holderName: "Basapa",
     cardType: "PHH",
     familyMembers: [
-      { id: 8, name: "Manjunath Gowda", aadhaarLast4: "2345", age: 35, relation: "Self" },
-      { id: 9, name: "Kavitha Gowda", aadhaarLast4: "6780", age: 32, relation: "Wife" },
-      { id: 10, name: "Deepa Gowda", aadhaarLast4: "1122", age: 8, relation: "Daughter" },
+      { id: 9, name: "Basapa", aadhaarLast4: "2345", age: 55, relation: "Self" },
+      { id: 10, name: "Kamala Basapa", aadhaarLast4: "6780", age: 50, relation: "Wife" },
+      { id: 11, name: "Ravi Basapa", aadhaarLast4: "1122", age: 28, relation: "Son" },
+      { id: 12, name: "Shanthi Basapa", aadhaarLast4: "4455", age: 24, relation: "Daughter" },
     ],
   },
 };
@@ -48,7 +50,7 @@ router.post("/ration-cards/verify", async (req, res): Promise<void> => {
 
   const card = SAMPLE_RATION_CARDS[parsed.data.rationCardNumber];
   if (!card) {
-    res.status(404).json({ message: "Ration card not found. Try: KA-BNG-2024-001, KA-BNG-2024-002, or KA-MYS-2024-003" });
+    res.status(404).json({ message: "Ration card not found. Try: KA-BNG-2024-001 (Revanna), KA-BNG-2024-002 (Jayanth), or KA-MYS-2024-003 (Basapa)" });
     return;
   }
 
