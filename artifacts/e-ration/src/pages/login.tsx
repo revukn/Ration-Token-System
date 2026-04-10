@@ -114,16 +114,23 @@ export default function Login() {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="flex flex-col items-center justify-center space-y-2 border-t bg-muted/50 px-6 py-4">
+          <CardFooter className="flex flex-col items-center justify-center space-y-3 border-t bg-muted/50 px-6 py-4">
             <div className="text-sm text-muted-foreground">
               Don't have an account?{" "}
               <Link href="/register" className="text-primary hover:underline font-medium">
                 Register here
               </Link>
             </div>
-            <Link href="/admin/login" className="text-xs text-muted-foreground hover:text-foreground">
-              Admin Portal
-            </Link>
+            <div className="w-full border-t pt-3">
+              <Link href="/admin/login">
+                <button
+                  type="button"
+                  className="w-full py-2 px-4 rounded-md border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-white transition-colors"
+                >
+                  Admin Portal Login
+                </button>
+              </Link>
+            </div>
           </CardFooter>
         </Card>
       </div>
