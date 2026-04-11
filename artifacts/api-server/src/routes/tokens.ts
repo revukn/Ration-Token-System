@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db, tokensTable, usersTable } from "@workspace/db";
-import { GenerateTokenBody, GetAllTokensQueryParams, VerifyTokenParams, ApproveTokenParams, DistributeTokenParams } from "@workspace/api-zod";
+import { GenerateTokenBody, GetAllTokensQueryParams } from "@workspace/api-zod";
+import { sendTokenConfirmationEmail } from "../lib/mailer";
 
 const router: IRouter = Router();
 
@@ -40,6 +41,18 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
       userId,
     })
     .returning();
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (user) {
+    sendTokenConfirmationEmail(
+      user.email,
+      user.name,
+      token.tokenNumber,
+      token.rationCardNumber,
+      token.selectedMembers as string[],
+      token.verificationType,
+    ).catch(() => {});
+  }
 
   res.status(201).json({
     id: token.id,

@@ -1,5 +1,8 @@
 import { Router, type IRouter } from "express";
+import { eq } from "drizzle-orm";
 import { VerifyRationCardBody, SendOtpBody, VerifyOtpBody, VerifyFaceBody } from "@workspace/api-zod";
+import { db, usersTable } from "@workspace/db";
+import { sendOtpEmail } from "../lib/mailer";
 
 const router: IRouter = Router();
 
@@ -39,7 +42,7 @@ const SAMPLE_RATION_CARDS: Record<string, any> = {
   },
 };
 
-const otpStore: Record<string, string> = {};
+const otpStore: Record<string, { otp: string; expiresAt: number }> = {};
 
 router.post("/ration-cards/verify", async (req, res): Promise<void> => {
   const parsed = VerifyRationCardBody.safeParse(req.body);
@@ -65,11 +68,42 @@ router.post("/verification/send-otp", async (req, res): Promise<void> => {
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore[parsed.data.aadhaarNumber] = otp;
+  otpStore[parsed.data.aadhaarNumber] = {
+    otp,
+    expiresAt: Date.now() + 10 * 60 * 1000,
+  };
 
-  req.log.info({ aadhaar: parsed.data.aadhaarNumber, otp }, "OTP generated (demo mode)");
+  const userId = (req.session as any)?.userId;
+  let userEmail = "";
+  let userName = "";
 
-  res.json({ message: `OTP sent successfully. For demo, use: ${otp}` });
+  if (userId) {
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+    if (user) {
+      userEmail = user.email;
+      userName = user.name;
+    }
+  }
+
+  const smtpConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+  if (userEmail) {
+    const emailResult = await sendOtpEmail(userEmail, otp);
+    req.log.info({ to: userEmail, emailSent: emailResult.success }, "OTP process completed");
+
+    if (smtpConfigured) {
+      res.json({
+        message: `OTP sent to ${userEmail}. Please check your inbox and enter the 6-digit code.`,
+      });
+    } else {
+      res.json({
+        message: `OTP sent to ${userEmail}. (Demo mode — your OTP is: ${otp})`,
+      });
+    }
+  } else {
+    req.log.info({ otp }, "OTP generated (no user email in session)");
+    res.json({ message: `OTP generated. Demo OTP: ${otp}` });
+  }
 });
 
 router.post("/verification/verify-otp", async (req, res): Promise<void> => {
@@ -79,14 +113,24 @@ router.post("/verification/verify-otp", async (req, res): Promise<void> => {
     return;
   }
 
-  const storedOtp = otpStore[parsed.data.aadhaarNumber];
-  if (!storedOtp || storedOtp !== parsed.data.otp) {
-    res.status(400).json({ message: "Invalid OTP" });
+  const entry = otpStore[parsed.data.aadhaarNumber];
+  if (!entry) {
+    res.status(400).json({ message: "OTP not found or expired. Please request a new OTP." });
+    return;
+  }
+
+  if (Date.now() > entry.expiresAt) {
+    delete otpStore[parsed.data.aadhaarNumber];
+    res.status(400).json({ message: "OTP has expired. Please request a new OTP." });
+    return;
+  }
+
+  if (entry.otp !== parsed.data.otp) {
+    res.status(400).json({ message: "Invalid OTP. Please check your email and try again." });
     return;
   }
 
   delete otpStore[parsed.data.aadhaarNumber];
-
   res.json({ verified: true, message: "Aadhaar verification successful" });
 });
 
@@ -94,6 +138,11 @@ router.post("/verification/face", async (req, res): Promise<void> => {
   const parsed = VerifyFaceBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: parsed.error.message });
+    return;
+  }
+
+  if (!parsed.data.faceData || parsed.data.faceData.length < 100) {
+    res.status(400).json({ message: "Invalid face data. Please capture a clear image." });
     return;
   }
 
