@@ -1,6 +1,8 @@
+import "dotenv/config";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedAdmin } from "./lib/seed";
+import { connectDB } from "@workspace/db";
 
 const rawPort = process.env["PORT"];
 
@@ -16,6 +18,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+await connectDB();
 await seedAdmin();
 
 app.listen(port, (err) => {

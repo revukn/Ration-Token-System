@@ -1,6 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
-import { db, tokensTable, usersTable } from "@workspace/db";
+import { Token, User } from "@workspace/db";
 import { GenerateTokenBody, GetAllTokensQueryParams } from "@workspace/api-zod";
 import { sendTokenConfirmationEmail } from "../lib/mailer";
 
@@ -29,20 +28,17 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
 
   const tokenNumber = generateTokenNumber();
 
-  const [token] = await db
-    .insert(tokensTable)
-    .values({
-      tokenNumber,
-      rationCardNumber: parsed.data.rationCardNumber,
-      holderName: parsed.data.selectedMembers[0] || "Unknown",
-      selectedMembers: parsed.data.selectedMembers,
-      verificationType: parsed.data.verificationType,
-      status: "pending",
-      userId,
-    })
-    .returning();
+  const token = await Token.create({
+    tokenNumber,
+    rationCardNumber: parsed.data.rationCardNumber,
+    holderName: parsed.data.selectedMembers[0] || "Unknown",
+    selectedMembers: parsed.data.selectedMembers,
+    verificationType: parsed.data.verificationType,
+    status: "pending",
+    userId,
+  });
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  const user = await User.findById(userId);
   if (user) {
     sendTokenConfirmationEmail(
       user.email,
@@ -55,7 +51,7 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
   }
 
   res.status(201).json({
-    id: token.id,
+    id: token._id.toString(),
     tokenNumber: token.tokenNumber,
     rationCardNumber: token.rationCardNumber,
     holderName: token.holderName,
@@ -74,15 +70,11 @@ router.get("/tokens/my-tokens", async (req, res): Promise<void> => {
     return;
   }
 
-  const tokens = await db
-    .select()
-    .from(tokensTable)
-    .where(eq(tokensTable.userId, userId))
-    .orderBy(desc(tokensTable.createdAt));
+  const tokens = await Token.find({ userId }).sort({ createdAt: -1 });
 
   res.json(
     tokens.map((t) => ({
-      id: t.id,
+      id: t._id.toString(),
       tokenNumber: t.tokenNumber,
       rationCardNumber: t.rationCardNumber,
       holderName: t.holderName,
@@ -104,45 +96,25 @@ router.get("/admin/tokens", async (req, res): Promise<void> => {
 
   const params = GetAllTokensQueryParams.safeParse(req.query);
 
-  let query = db
-    .select({
-      id: tokensTable.id,
-      tokenNumber: tokensTable.tokenNumber,
-      rationCardNumber: tokensTable.rationCardNumber,
-      holderName: tokensTable.holderName,
-      selectedMembers: tokensTable.selectedMembers,
-      verificationType: tokensTable.verificationType,
-      status: tokensTable.status,
-      createdAt: tokensTable.createdAt,
-      updatedAt: tokensTable.updatedAt,
-      userId: tokensTable.userId,
-      userName: usersTable.name,
-      userEmail: usersTable.email,
-    })
-    .from(tokensTable)
-    .innerJoin(usersTable, eq(tokensTable.userId, usersTable.id))
-    .orderBy(desc(tokensTable.createdAt))
-    .$dynamic();
+  let query: any = { status: params.success && params.data.status ? params.data.status : { $exists: true } };
 
-  if (params.success && params.data.status) {
-    query = query.where(eq(tokensTable.status, params.data.status as any));
-  }
-
-  const tokens = await query;
+  const tokens = await Token.find(query)
+    .populate('userId', 'name email')
+    .sort({ createdAt: -1 });
 
   res.json(
     tokens.map((t) => ({
-      id: t.id,
+      id: t._id.toString(),
       tokenNumber: t.tokenNumber,
       rationCardNumber: t.rationCardNumber,
       holderName: t.holderName,
-      userName: t.userName,
-      userEmail: t.userEmail,
+      userName: (t.userId as any)?.name || 'Unknown',
+      userEmail: (t.userId as any)?.email || 'Unknown',
       selectedMembers: t.selectedMembers,
       verificationType: t.verificationType,
       status: t.status,
       createdAt: t.createdAt.toISOString(),
-      updatedAt: t.updatedAt?.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
     })),
   );
 });
@@ -154,29 +126,26 @@ router.post("/admin/tokens/:tokenId/verify", async (req, res): Promise<void> => 
     return;
   }
 
-  const raw = Array.isArray(req.params.tokenId) ? req.params.tokenId[0] : req.params.tokenId;
-  const tokenId = parseInt(raw, 10);
+  const tokenId = req.params.tokenId;
 
-  const [token] = await db
-    .update(tokensTable)
-    .set({ status: "verified", updatedAt: new Date() })
-    .where(eq(tokensTable.id, tokenId))
-    .returning();
+  const token = await Token.findByIdAndUpdate(
+    tokenId,
+    { status: "verified", updatedAt: new Date() },
+    { new: true }
+  ).populate('userId', 'name email');
 
   if (!token) {
     res.status(404).json({ message: "Token not found" });
     return;
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, token.userId));
-
   res.json({
-    id: token.id,
+    id: token._id.toString(),
     tokenNumber: token.tokenNumber,
     rationCardNumber: token.rationCardNumber,
     holderName: token.holderName,
-    userName: user?.name || "",
-    userEmail: user?.email || "",
+    userName: (token.userId as any)?.name || "",
+    userEmail: (token.userId as any)?.email || "",
     selectedMembers: token.selectedMembers,
     verificationType: token.verificationType,
     status: token.status,
@@ -192,29 +161,26 @@ router.post("/admin/tokens/:tokenId/approve", async (req, res): Promise<void> =>
     return;
   }
 
-  const raw = Array.isArray(req.params.tokenId) ? req.params.tokenId[0] : req.params.tokenId;
-  const tokenId = parseInt(raw, 10);
+  const tokenId = req.params.tokenId;
 
-  const [token] = await db
-    .update(tokensTable)
-    .set({ status: "approved", updatedAt: new Date() })
-    .where(eq(tokensTable.id, tokenId))
-    .returning();
+  const token = await Token.findByIdAndUpdate(
+    tokenId,
+    { status: "approved", updatedAt: new Date() },
+    { new: true }
+  ).populate('userId', 'name email');
 
   if (!token) {
     res.status(404).json({ message: "Token not found" });
     return;
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, token.userId));
-
   res.json({
-    id: token.id,
+    id: token._id.toString(),
     tokenNumber: token.tokenNumber,
     rationCardNumber: token.rationCardNumber,
     holderName: token.holderName,
-    userName: user?.name || "",
-    userEmail: user?.email || "",
+    userName: (token.userId as any)?.name || "",
+    userEmail: (token.userId as any)?.email || "",
     selectedMembers: token.selectedMembers,
     verificationType: token.verificationType,
     status: token.status,
@@ -230,29 +196,26 @@ router.post("/admin/tokens/:tokenId/distribute", async (req, res): Promise<void>
     return;
   }
 
-  const raw = Array.isArray(req.params.tokenId) ? req.params.tokenId[0] : req.params.tokenId;
-  const tokenId = parseInt(raw, 10);
+  const tokenId = req.params.tokenId;
 
-  const [token] = await db
-    .update(tokensTable)
-    .set({ status: "distributed", updatedAt: new Date() })
-    .where(eq(tokensTable.id, tokenId))
-    .returning();
+  const token = await Token.findByIdAndUpdate(
+    tokenId,
+    { status: "distributed", updatedAt: new Date() },
+    { new: true }
+  ).populate('userId', 'name email');
 
   if (!token) {
     res.status(404).json({ message: "Token not found" });
     return;
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, token.userId));
-
   res.json({
-    id: token.id,
+    id: token._id.toString(),
     tokenNumber: token.tokenNumber,
     rationCardNumber: token.rationCardNumber,
     holderName: token.holderName,
-    userName: user?.name || "",
-    userEmail: user?.email || "",
+    userName: (token.userId as any)?.name || "",
+    userEmail: (token.userId as any)?.email || "",
     selectedMembers: token.selectedMembers,
     verificationType: token.verificationType,
     status: token.status,
@@ -268,7 +231,7 @@ router.get("/admin/dashboard-stats", async (req, res): Promise<void> => {
     return;
   }
 
-  const allTokens = await db.select().from(tokensTable);
+  const allTokens = await Token.find({});
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

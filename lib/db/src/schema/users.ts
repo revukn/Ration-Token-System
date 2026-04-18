@@ -1,19 +1,26 @@
-import { pgTable, text, serial, timestamp, pgEnum } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import mongoose from "mongoose";
 import { z } from "zod/v4";
 
-export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
+export const userRoleEnum = ["user", "admin"] as const;
 
-export const usersTable = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  address: text("address").notNull(),
-  role: userRoleEnum("role").notNull().default("user"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  address: { type: String, required: true },
+  role: { type: String, enum: userRoleEnum, default: "user" },
+  createdAt: { type: Date, default: Date.now }
 });
 
-export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });
+export const User = mongoose.model("User", userSchema);
+
+export const insertUserSchema = z.object({
+  name: z.string(),
+  email: z.string().email(),
+  password: z.string(),
+  address: z.string(),
+  role: z.enum(userRoleEnum).optional()
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof usersTable.$inferSelect;
+export type UserType = mongoose.InferSchemaType<typeof userSchema>;

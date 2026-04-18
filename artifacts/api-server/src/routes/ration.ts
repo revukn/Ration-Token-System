@@ -1,7 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
 import { VerifyRationCardBody, SendOtpBody, VerifyOtpBody, VerifyFaceBody } from "@workspace/api-zod";
-import { db, usersTable } from "@workspace/db";
+import { User } from "@workspace/db";
 import { sendOtpEmail } from "../lib/mailer";
 
 const router: IRouter = Router();
@@ -78,7 +77,7 @@ router.post("/verification/send-otp", async (req, res): Promise<void> => {
   let userName = "";
 
   if (userId) {
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+    const user = await User.findById(userId);
     if (user) {
       userEmail = user.email;
       userName = user.name;

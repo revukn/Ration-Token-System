@@ -1,24 +1,32 @@
-import { pgTable, text, serial, timestamp, pgEnum, integer, json } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import mongoose from "mongoose";
 import { z } from "zod/v4";
-import { usersTable } from "./users";
 
-export const tokenStatusEnum = pgEnum("token_status", ["pending", "verified", "approved", "distributed"]);
-export const verificationTypeEnum = pgEnum("verification_type", ["face", "otp"]);
+export const tokenStatusEnum = ["pending", "verified", "approved", "distributed"] as const;
+export const verificationTypeEnum = ["face", "otp"] as const;
 
-export const tokensTable = pgTable("tokens", {
-  id: serial("id").primaryKey(),
-  tokenNumber: text("token_number").notNull().unique(),
-  rationCardNumber: text("ration_card_number").notNull(),
-  holderName: text("holder_name").notNull(),
-  selectedMembers: json("selected_members").$type<string[]>().notNull(),
-  verificationType: verificationTypeEnum("verification_type").notNull(),
-  status: tokenStatusEnum("status").notNull().default("pending"),
-  userId: integer("user_id").notNull().references(() => usersTable.id),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+const tokenSchema = new mongoose.Schema({
+  tokenNumber: { type: String, required: true, unique: true },
+  rationCardNumber: { type: String, required: true },
+  holderName: { type: String, required: true },
+  selectedMembers: { type: [String], required: true },
+  verificationType: { type: String, enum: verificationTypeEnum, required: true },
+  status: { type: String, enum: tokenStatusEnum, default: "pending" },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
-export const insertTokenSchema = createInsertSchema(tokensTable).omit({ id: true, createdAt: true, updatedAt: true });
+export const Token = mongoose.model("Token", tokenSchema);
+
+export const insertTokenSchema = z.object({
+  tokenNumber: z.string(),
+  rationCardNumber: z.string(),
+  holderName: z.string(),
+  selectedMembers: z.array(z.string()),
+  verificationType: z.enum(verificationTypeEnum),
+  status: z.enum(tokenStatusEnum).optional(),
+  userId: z.string()
+});
+
 export type InsertToken = z.infer<typeof insertTokenSchema>;
-export type Token = typeof tokensTable.$inferSelect;
+export type TokenType = mongoose.InferSchemaType<typeof tokenSchema>;
