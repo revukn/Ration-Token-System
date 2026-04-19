@@ -55,8 +55,8 @@ export default function Login() {
         },
         onError: (error: any) => {
           toast({
-            title: "Login failed",
-            description: error.message || "Invalid credentials",
+            title: "Login Failed",
+            description: "Invalid email or password. Please check your credentials and try again.",
             variant: "destructive",
           });
         },

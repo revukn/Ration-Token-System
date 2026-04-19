@@ -84,8 +84,8 @@ export default function AdminTokens() {
         },
         onError: (err: any) => {
           toast({ 
-            title: `Failed to ${action} token`, 
-            description: err.message, 
+            title: `Token ${action} Failed`, 
+            description: "Unable to update token status. Please try again.", 
             variant: "destructive" 
           });
         }

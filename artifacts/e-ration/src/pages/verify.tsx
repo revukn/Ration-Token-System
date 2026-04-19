@@ -126,7 +126,9 @@ export default function Verify() {
           toast({ title: "OTP Sent", description: data.message });
         },
         onError: (err: any) => {
-          toast({ title: "Error", description: err.message || "Failed to send OTP", variant: "destructive" });
+          const errorMessage = err.message || "Unable to send OTP. Please check your connection and try again.";
+        const errorTitle = errorMessage.includes("Aadhaar") ? "Aadhaar Verification Failed" : "OTP Send Failed";
+        toast({ title: errorTitle, description: errorMessage, variant: "destructive" });
         },
       }
     );
@@ -147,7 +149,7 @@ export default function Verify() {
           }
         },
         onError: (err: any) => {
-          toast({ title: "Invalid OTP", description: err.message, variant: "destructive" });
+          toast({ title: "OTP Verification Failed", description: "The OTP you entered is incorrect or expired. Please try again.", variant: "destructive" });
         },
       }
     );
@@ -175,7 +177,7 @@ export default function Verify() {
           }
         },
         onError: (err: any) => {
-          toast({ title: "Error", description: err.message, variant: "destructive" });
+          toast({ title: "Face Verification Failed", description: "Unable to verify your face. Please try again or use OTP verification.", variant: "destructive" });
           setCapturedImage(null);
         },
       }
@@ -199,7 +201,7 @@ export default function Verify() {
           setLocation("/my-tokens");
         },
         onError: (err: any) => {
-          toast({ title: "Error Generating Token", description: err.message, variant: "destructive" });
+          toast({ title: "Token Generation Failed", description: "Unable to generate your ration token. Please try again later.", variant: "destructive" });
         },
       }
     );
@@ -260,7 +262,7 @@ export default function Verify() {
     <UserLayout>
       <div className="max-w-xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => setLocation("/dashboard")} className="gap-2">
+          <Button className="w-full gap-2" onClick={() => setLocation("/dashboard")}>
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>

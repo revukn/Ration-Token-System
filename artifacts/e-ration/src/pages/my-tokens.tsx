@@ -33,7 +33,7 @@ export default function MyTokens() {
     <UserLayout>
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => setLocation("/dashboard")} className="gap-2">
+          <Button className="w-full gap-2" onClick={() => setLocation("/dashboard")}>
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>

@@ -49,8 +49,8 @@ export default function AdminLogin() {
         },
         onError: (error: any) => {
           toast({
-            title: "Login failed",
-            description: error.message || "Invalid credentials",
+            title: "Admin Login Failed",
+            description: "Invalid admin credentials. Please check your email and password.",
             variant: "destructive",
           });
         },

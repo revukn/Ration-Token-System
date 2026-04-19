@@ -68,8 +68,8 @@ export default function Register() {
         },
         onError: (error: any) => {
           toast({
-            title: "Registration failed",
-            description: error.message || "An error occurred during registration",
+            title: "Registration Failed",
+            description: "Unable to create your account. Please check your information and try again.",
             variant: "destructive",
           });
         },

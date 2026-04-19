@@ -58,7 +58,7 @@ router.post("/verification/send-otp", async (req, res): Promise<void> => {
 
     if (!aadharExists) {
       res.status(400).json({ 
-        message: "Aadhaar number not found in our records. Please ensure you're entering the correct Aadhaar number associated with this ration card." 
+        message: "Entered Aadhaar is wrong. Please recheck Aadhaar number." 
       });
       return;
     }

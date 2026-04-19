@@ -36,8 +36,8 @@ export default function Dashboard() {
       }, {
         onError: (err: any) => {
           toast({
-            title: "Verification Failed",
-            description: err.message || "Could not find details for your card.",
+            title: "Ration Card Verification Failed",
+            description: "Unable to find your ration card details. Please check your card number and try again.",
             variant: "destructive"
           });
         }
