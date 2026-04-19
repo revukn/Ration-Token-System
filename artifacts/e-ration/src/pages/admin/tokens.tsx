@@ -144,7 +144,7 @@ export default function AdminTokens() {
       return;
     }
 
-    // Verify the token
+    // If digits match, then call the backend API to verify the token
     verifyMutation.mutate(
       { tokenId: parseInt(selectedTokenId) },
       {
