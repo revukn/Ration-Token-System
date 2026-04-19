@@ -118,7 +118,7 @@ export default function Dashboard() {
                               {member.name} <span className="text-muted-foreground font-normal ml-2">({member.relation})</span>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                              Aadhaar ending in: •••• {member.aadhaarLast4} | Age: {member.age}
+                              Aadhaar: ****{member.aadharCardNumber?.slice(-4)} | Age: {member.age}
                             </p>
                           </div>
                         </div>
@@ -193,7 +193,7 @@ export default function Dashboard() {
                     {member.name} <span className="text-muted-foreground font-normal ml-2">({member.relation})</span>
                   </label>
                   <p className="text-xs text-muted-foreground">
-                    Aadhaar ending in: •••• {member.aadhaarLast4} | Age: {member.age}
+                    Aadhaar: ****{member.aadharCardNumber?.slice(-4)} | Age: {member.age}
                   </p>
                 </div>
               </div>

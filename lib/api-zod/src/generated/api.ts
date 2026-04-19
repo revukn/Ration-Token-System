@@ -94,7 +94,7 @@ export const VerifyRationCardResponse = zod.object({
     zod.object({
       id: zod.number(),
       name: zod.string(),
-      aadhaarLast4: zod.string(),
+      aadharCardNumber: zod.string(),
       age: zod.number(),
       relation: zod.string(),
     }),

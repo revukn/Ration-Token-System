@@ -502,7 +502,7 @@ components:
           type: integer
         name:
           type: string
-        aadhaarLast4:
+        aadharCardNumber:
           type: string
         age:
           type: integer
@@ -511,7 +511,7 @@ components:
       required:
         - id
         - name
-        - aadhaarLast4
+        - aadharCardNumber
         - age
         - relation
 

@@ -39,11 +39,35 @@ router.post("/verification/send-otp", async (req, res): Promise<void> => {
     return;
   }
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore[parsed.data.aadhaarNumber] = {
-    otp,
-    expiresAt: Date.now() + 10 * 60 * 1000,
-  };
+  try {
+    // Validate that the aadhar number exists in the database for this ration card
+    const card = await RationCard.findOne({
+      rationCardNumber: parsed.data.rationCardNumber,
+      isActive: true
+    });
+
+    if (!card) {
+      res.status(404).json({ message: "Ration card not found. Please check your ration card number and try again." });
+      return;
+    }
+
+    // Check if the aadhar number matches any family member
+    const aadharExists = card.familyMembers.some(member => 
+      member.aadharCardNumber === parsed.data.aadhaarNumber
+    );
+
+    if (!aadharExists) {
+      res.status(400).json({ 
+        message: "Aadhaar number not found in our records. Please ensure you're entering the correct Aadhaar number associated with this ration card." 
+      });
+      return;
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore[parsed.data.aadhaarNumber] = {
+      otp,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    };
 
   const userId = (req.session as any)?.userId;
   let userEmail = "";
@@ -75,6 +99,9 @@ router.post("/verification/send-otp", async (req, res): Promise<void> => {
   } else {
     req.log.info({ otp }, "OTP generated (no user email in session)");
     res.json({ message: `OTP generated. Demo OTP: ${otp}` });
+  }
+  } catch (error) {
+    res.status(500).json({ message: "Failed to send OTP" });
   }
 });
 

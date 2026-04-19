@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { format } from "date-fns";
-import { QrCode, Calendar, Users, Hash, ShieldCheck } from "lucide-react";
+import { QrCode, Calendar, Users, Hash, ShieldCheck, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
@@ -26,10 +27,17 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function MyTokens() {
   const { data: tokens, isLoading } = useGetMyTokens();
+  const [, setLocation] = useLocation();
 
   return (
     <UserLayout>
       <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={() => setLocation("/dashboard")} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">My Ration Tokens</h1>
           <p className="text-muted-foreground">View and present your generated tokens at the ration shop.</p>

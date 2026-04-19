@@ -26,9 +26,28 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
     return;
   }
 
-  const tokenNumber = generateTokenNumber();
+  try {
+    // Check if a token already exists for this ration card that is not distributed
+    const existingToken = await Token.findOne({
+      rationCardNumber: parsed.data.rationCardNumber,
+      status: { $in: ["pending", "verified", "approved"] }
+    });
 
-  const token = await Token.create({
+    if (existingToken) {
+      res.status(400).json({ 
+        message: "A token has already been generated for this ration card. Please check your existing token or contact support if you need a new one.",
+        existingToken: {
+          tokenNumber: existingToken.tokenNumber,
+          status: existingToken.status,
+          createdAt: existingToken.createdAt
+        }
+      });
+      return;
+    }
+
+    const tokenNumber = generateTokenNumber();
+
+    const token = await Token.create({
     tokenNumber,
     rationCardNumber: parsed.data.rationCardNumber,
     holderName: parsed.data.selectedMembers[0] || "Unknown",
@@ -61,6 +80,9 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
     createdAt: token.createdAt.toISOString(),
     updatedAt: token.updatedAt.toISOString(),
   });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to generate token" });
+  }
 });
 
 router.get("/tokens/my-tokens", async (req, res): Promise<void> => {

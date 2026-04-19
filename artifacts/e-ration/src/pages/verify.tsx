@@ -10,7 +10,7 @@ import { useSendOtp, useVerifyOtp, useVerifyFace, useGenerateToken, getGetMyToke
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Camera, CheckCircle2, ShieldCheck, Smartphone, Ticket, Mail, RefreshCw, VideoOff } from "lucide-react";
+import { Camera, CheckCircle2, ShieldCheck, Smartphone, Ticket, Mail, RefreshCw, VideoOff, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Verify() {
@@ -259,6 +259,12 @@ export default function Verify() {
   return (
     <UserLayout>
       <div className="max-w-xl mx-auto space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={() => setLocation("/dashboard")} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Identity Verification</h1>
           <p className="text-muted-foreground">Verify your identity to generate the ration token.</p>

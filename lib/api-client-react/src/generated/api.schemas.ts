@@ -72,7 +72,7 @@ export const RationCardDetailsCardType = {
 export interface FamilyMember {
   id: number;
   name: string;
-  aadhaarLast4: string;
+  aadharCardNumber: string;
   age: number;
   relation: string;
 }
