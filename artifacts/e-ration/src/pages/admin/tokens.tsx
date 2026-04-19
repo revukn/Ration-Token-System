@@ -34,6 +34,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Search, MoreVertical, CheckCircle2, Package, Shield, ExternalLink, Loader2 } from "lucide-react";
 import { Empty } from "@/components/ui/empty";
 
@@ -55,6 +60,9 @@ const StatusBadge = ({ status }: { status: string }) => {
 export default function AdminTokens() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
+  const [last4Digits, setLast4Digits] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -71,7 +79,18 @@ export default function AdminTokens() {
   const distributeMutation = useDistributeToken();
 
   const handleAction = (action: 'verify' | 'approve' | 'distribute', id: number) => {
-    const mutation = action === 'verify' ? verifyMutation : action === 'approve' ? approveMutation : distributeMutation;
+    if (action === 'verify') {
+      // Find the token to get its number for validation
+      const token = tokens?.find(t => t.id === id);
+      if (token) {
+        setSelectedTokenId(id.toString());
+        setVerificationDialogOpen(true);
+        setLast4Digits("");
+      }
+      return;
+    }
+    
+    const mutation = action === 'approve' ? approveMutation : distributeMutation;
     
     mutation.mutate(
       { tokenId: id },
@@ -86,6 +105,62 @@ export default function AdminTokens() {
           toast({ 
             title: `Token ${action} Failed`, 
             description: "Unable to update token status. Please try again.", 
+            variant: "destructive" 
+          });
+        }
+      }
+    );
+  };
+
+  const handleVerifyToken = () => {
+    if (!selectedTokenId || last4Digits.length !== 4) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter exactly 4 digits of the token number.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Find the token and check if last 4 digits match
+    const token = tokens?.find(t => t.id.toString() === selectedTokenId);
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Token not found.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if last 4 digits match
+    const tokenLast4 = token.tokenNumber.slice(-4);
+    if (tokenLast4 !== last4Digits) {
+      toast({
+        title: "Verification Failed",
+        description: "Token number does not match. Please check the last 4 digits.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Verify the token
+    verifyMutation.mutate(
+      { tokenId: parseInt(selectedTokenId) },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetAllTokensQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetAdminDashboardStatsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetRecentActivityQueryKey() });
+          toast({ title: "Token verified successfully" });
+          setVerificationDialogOpen(false);
+          setSelectedTokenId(null);
+          setLast4Digits("");
+        },
+        onError: (err: any) => {
+          toast({ 
+            title: "Token Verification Failed", 
+            description: "Unable to verify token. Please try again.", 
             variant: "destructive" 
           });
         }
@@ -192,11 +267,11 @@ export default function AdminTokens() {
                               
                               {token.status === "pending" && (
                                 <DropdownMenuItem onClick={() => handleAction('verify', token.id)}>
-                                  <Shield className="mr-2 h-4 w-4" /> Verify Internally
+                                  <Shield className="mr-2 h-4 w-4" /> Verify Token
                                 </DropdownMenuItem>
                               )}
                               
-                              {(token.status === "pending" || token.status === "verified") && (
+                              {token.status === "verified" && (
                                 <DropdownMenuItem onClick={() => handleAction('approve', token.id)}>
                                   <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" /> Approve Token
                                 </DropdownMenuItem>
@@ -223,6 +298,63 @@ export default function AdminTokens() {
             )}
           </CardContent>
         </Card>
+      
+      {/* Verification Dialog */}
+      <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <div className="space-y-4">
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold">Verify Token</h3>
+              <p className="text-sm text-muted-foreground">
+                Please enter the last 4 digits of the token number to verify
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Input
+                placeholder="Enter last 4 digits"
+                value={last4Digits}
+                onChange={(e) => {
+                  // Only allow numbers and limit to 4 digits
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  setLast4Digits(value);
+                }}
+                maxLength={4}
+                className="text-center text-lg"
+                autoFocus
+              />
+            </div>
+            
+            <DialogFooter className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setVerificationDialogOpen(false);
+                  setSelectedTokenId(null);
+                  setLast4Digits("");
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleVerifyToken}
+                disabled={last4Digits.length !== 4 || verifyMutation.isPending}
+                className="flex-1"
+              >
+                {verifyMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify Token"
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </AdminLayout>
   );
