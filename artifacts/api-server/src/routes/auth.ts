@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
-import { User } from "@workspace/db";
+import { User, RationCard } from "@workspace/db";
 import { RegisterUserBody, LoginUserBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -12,22 +12,38 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
-  const { name, address, email, password } = parsed.data;
+  const { firstName, lastName, email, password, rationCardNumber } = parsed.data;
 
   const existing = await User.findOne({ email });
-
   if (existing) {
     res.status(400).json({ message: "Email already registered" });
+    return;
+  }
+
+  const existingRationCard = await User.findOne({ rationCardNumber });
+  if (existingRationCard) {
+    res.status(400).json({ message: "Ration card already registered" });
+    return;
+  }
+
+  const rationCard = await RationCard.findOne({ 
+    rationCardNumber, 
+    isActive: true 
+  });
+
+  if (!rationCard) {
+    res.status(400).json({ message: "Invalid ration card number" });
     return;
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await User.create({
-    name,
-    address,
+    firstName,
+    lastName,
     email,
     password: hashedPassword,
+    rationCardNumber,
     role: "user"
   });
 
@@ -37,9 +53,10 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   res.status(201).json({
     user: {
       id: user._id.toString(),
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
-      address: user.address,
+      rationCardNumber: user.rationCardNumber,
       role: user.role,
     },
     message: "Registration successful",
@@ -53,23 +70,23 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const { email, password } = parsed.data;
+  const { rationCardNumber, password } = parsed.data;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ rationCardNumber });
 
   if (!user) {
-    res.status(401).json({ message: "Invalid email or password" });
+    res.status(401).json({ message: "Invalid ration card number or password" });
     return;
   }
 
   if (user.role !== "user") {
-    res.status(401).json({ message: "Invalid email or password" });
+    res.status(401).json({ message: "Invalid ration card number or password" });
     return;
   }
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
-    res.status(401).json({ message: "Invalid email or password" });
+    res.status(401).json({ message: "Invalid ration card number or password" });
     return;
   }
 
@@ -79,9 +96,10 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   res.json({
     user: {
       id: user._id.toString(),
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
-      address: user.address,
+      rationCardNumber: user.rationCardNumber,
       role: user.role,
     },
     message: "Login successful",
@@ -116,9 +134,10 @@ router.post("/auth/admin/login", async (req, res): Promise<void> => {
   res.json({
     user: {
       id: user._id.toString(),
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
-      address: user.address,
+      rationCardNumber: user.rationCardNumber,
       role: user.role,
     },
     message: "Admin login successful",
@@ -141,9 +160,10 @@ router.get("/auth/me", async (req, res): Promise<void> => {
 
   res.json({
     id: user._id.toString(),
-    name: user.name,
+    firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
-    address: user.address,
+    rationCardNumber: user.rationCardNumber,
     role: user.role,
   });
 });

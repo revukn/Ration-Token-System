@@ -6,6 +6,7 @@ import "dotenv/config";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedAdmin } from "./lib/seed";
+import { seedRationCards } from "./lib/seedRationCards";
 import { connectDB } from "@workspace/db";
 
 const rawPort = process.env["PORT"];
@@ -24,6 +25,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 await connectDB();
 await seedAdmin();
+await seedRationCards();
 
 app.listen(port, (err) => {
   if (err) {
