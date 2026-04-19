@@ -51,9 +51,6 @@ export function UserLayout({ children }: { children: React.ReactNode }) {
           {user && (
             <div className="flex items-center gap-6">
               <nav className="hidden md:flex items-center gap-4 text-sm font-medium text-muted-foreground">
-                <Link href="/dashboard" className="hover:text-foreground transition-colors data-[active=true]:text-primary data-[active=true]:font-semibold">
-                  Dashboard
-                </Link>
                 <Link href="/my-tokens" className="hover:text-foreground transition-colors data-[active=true]:text-primary data-[active=true]:font-semibold">
                   My Tokens
                 </Link>
