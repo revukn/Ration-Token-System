@@ -149,31 +149,50 @@ router.post("/admin/tokens/:tokenId/verify", async (req, res): Promise<void> => 
   }
 
   const tokenId = req.params.tokenId;
+  console.log("Verify token attempt - TokenId:", tokenId);
 
-  const token = await Token.findByIdAndUpdate(
-    tokenId,
-    { status: "verified", updatedAt: new Date() },
-    { new: true }
-  ).populate('userId', 'name email');
+  try {
+    // First check if token exists
+    const existingToken = await Token.findById(tokenId);
+    if (!existingToken) {
+      console.log("Token not found with ID:", tokenId);
+      res.status(404).json({ message: "Token not found" });
+      return;
+    }
+    
+    console.log("Found token:", existingToken.tokenNumber, "Current status:", existingToken.status);
 
-  if (!token) {
-    res.status(404).json({ message: "Token not found" });
-    return;
+    const token = await Token.findByIdAndUpdate(
+      tokenId,
+      { status: "verified", updatedAt: new Date() },
+      { new: true }
+    ).populate('userId', 'name email');
+
+    if (!token) {
+      console.log("Failed to update token");
+      res.status(404).json({ message: "Token not found" });
+      return;
+    }
+
+    console.log("Token updated successfully to verified status");
+
+    res.json({
+      id: token._id.toString(),
+      tokenNumber: token.tokenNumber,
+      rationCardNumber: token.rationCardNumber,
+      holderName: token.holderName,
+      userName: (token.userId as any)?.name || "",
+      userEmail: (token.userId as any)?.email || "",
+      selectedMembers: token.selectedMembers,
+      verificationType: token.verificationType,
+      status: token.status,
+      createdAt: token.createdAt.toISOString(),
+      updatedAt: token.updatedAt.toISOString(),
+    });
+  } catch (error) {
+    console.error("Verify token error:", error);
+    res.status(500).json({ message: "Failed to verify token" });
   }
-
-  res.json({
-    id: token._id.toString(),
-    tokenNumber: token.tokenNumber,
-    rationCardNumber: token.rationCardNumber,
-    holderName: token.holderName,
-    userName: (token.userId as any)?.name || "",
-    userEmail: (token.userId as any)?.email || "",
-    selectedMembers: token.selectedMembers,
-    verificationType: token.verificationType,
-    status: token.status,
-    createdAt: token.createdAt.toISOString(),
-    updatedAt: token.updatedAt.toISOString(),
-  });
 });
 
 router.post("/admin/tokens/:tokenId/approve", async (req, res): Promise<void> => {
@@ -277,17 +296,9 @@ router.get("/admin/recent-activity", async (req, res): Promise<void> => {
     return;
   }
 
-  const tokens = await db
-    .select({
-      id: tokensTable.id,
-      tokenNumber: tokensTable.tokenNumber,
-      status: tokensTable.status,
-      updatedAt: tokensTable.updatedAt,
-      userName: usersTable.name,
-    })
-    .from(tokensTable)
-    .innerJoin(usersTable, eq(tokensTable.userId, usersTable.id))
-    .orderBy(desc(tokensTable.updatedAt))
+  const tokens = await Token.find({})
+    .populate('userId', 'name')
+    .sort({ updatedAt: -1 })
     .limit(20);
 
   const activityMap: Record<string, string> = {
@@ -299,10 +310,10 @@ router.get("/admin/recent-activity", async (req, res): Promise<void> => {
 
   res.json(
     tokens.map((t) => ({
-      id: t.id,
+      id: t._id.toString(),
       tokenNumber: t.tokenNumber,
       action: activityMap[t.status] || t.status,
-      userName: t.userName,
+      userName: (t.userId as any)?.name || "Unknown",
       timestamp: t.updatedAt.toISOString(),
     })),
   );
