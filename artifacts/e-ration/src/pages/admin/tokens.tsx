@@ -146,7 +146,7 @@ export default function AdminTokens() {
 
     // If digits match, then call the backend API to verify the token
     verifyMutation.mutate(
-      { tokenId: parseInt(selectedTokenId) },
+      { tokenId: selectedTokenId },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetAllTokensQueryKey() });

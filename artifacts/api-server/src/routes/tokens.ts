@@ -152,32 +152,20 @@ router.post("/admin/tokens/:tokenId/verify", async (req, res): Promise<void> => 
   console.log("Verify token attempt - TokenId:", tokenId);
 
   try {
-    // Since frontend sends number but we stored as ObjectId string, we need to find the token by the numeric ID
-    const allTokens = await Token.find({});
-    let targetToken = null;
-    
-    // Find token by matching the numeric ID (converted from ObjectId)
-    for (const token of allTokens) {
-      const tokenIdAsNumber = parseInt(token._id.toString(), 16) % 1000000;
-      if (tokenIdAsNumber.toString() === tokenId) {
-        targetToken = token;
-        break;
-      }
-    }
-    
-    if (!targetToken) {
+    // Use the tokenId directly as ObjectId string
+    const token = await Token.findByIdAndUpdate(
+      tokenId,
+      { status: "verified", updatedAt: new Date() },
+      { new: true }
+    ).populate('userId', 'name email');
+
+    if (!token) {
       console.log("Token not found with ID:", tokenId);
       res.status(404).json({ message: "Token not found" });
       return;
     }
     
-    console.log("Found token:", targetToken.tokenNumber, "Current status:", targetToken.status);
-
-    const token = await Token.findByIdAndUpdate(
-      targetToken._id,
-      { status: "verified", updatedAt: new Date() },
-      { new: true }
-    ).populate('userId', 'name email');
+    console.log("Found token:", token.tokenNumber, "Current status:", token.status);
 
     if (!token) {
       console.log("Failed to update token");
@@ -188,7 +176,7 @@ router.post("/admin/tokens/:tokenId/verify", async (req, res): Promise<void> => 
     console.log("Token updated successfully to verified status");
 
     res.json({
-      id: parseInt(token._id.toString(), 16) % 1000000,
+      id: token._id.toString(),
       tokenNumber: token.tokenNumber,
       rationCardNumber: token.rationCardNumber,
       holderName: token.holderName,
