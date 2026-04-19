@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,14 +17,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RationCardSearch } from "@/components/ui/ration-card-search";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  address: z.string().min(10, "Please enter your full address"),
+  rationCardNumber: z.string().min(10, "Please enter a valid ration card number"),
 });
 
 export default function Register() {
@@ -31,14 +34,16 @@ export default function Register() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const registerMutation = useRegisterUser();
+  const [rationCardValid, setRationCardValid] = useState(false);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
-      address: "",
+      rationCardNumber: "",
     },
   });
 
@@ -78,19 +83,34 @@ export default function Register() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="email"
@@ -117,27 +137,23 @@ export default function Register() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Residential Address</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Full address as per records..." 
-                          className="resize-none" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <FormLabel>Ration Card Number</FormLabel>
+                  <RationCardSearch
+                    value={form.watch("rationCardNumber")}
+                    onChange={(value) => form.setValue("rationCardNumber", value)}
+                    onValidation={(valid, message) => setRationCardValid(valid)}
+                  />
+                  {form.formState.errors.rationCardNumber && (
+                    <p className="text-sm text-red-600">
+                      {form.formState.errors.rationCardNumber.message}
+                    </p>
                   )}
-                />
+                </div>
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={registerMutation.isPending}
+                  disabled={registerMutation.isPending || !rationCardValid}
                 >
                   {registerMutation.isPending ? "Registering..." : "Register"}
                 </Button>

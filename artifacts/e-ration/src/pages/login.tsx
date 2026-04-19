@@ -20,7 +20,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Logo } from "@/components/logo";
 
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  rationCardNumber: z.string().min(10, "Please enter a valid ration card number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -33,7 +33,7 @@ export default function Login() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      rationCardNumber: "",
       password: "",
     },
   });
@@ -72,7 +72,7 @@ export default function Login() {
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold tracking-tight">Citizen Login</CardTitle>
             <CardDescription>
-              Enter your details to access the E-Ration Token System
+              Enter your ration card number and password to access the E-Ration Token System
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -80,12 +80,16 @@ export default function Login() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="rationCardNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>Ration Card Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="name@example.com" {...field} />
+                        <Input 
+                          placeholder="e.g., KA-BNG-2024-001" 
+                          className="uppercase"
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
