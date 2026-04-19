@@ -6,9 +6,10 @@ interface RationCardSearchProps {
   value: string;
   onChange: (value: string) => void;
   onValidation: (valid: boolean, message: string) => void;
+  allowRegistered?: boolean;
 }
 
-export function RationCardSearch({ value, onChange, onValidation }: RationCardSearchProps) {
+export function RationCardSearch({ value, onChange, onValidation, allowRegistered = false }: RationCardSearchProps) {
   const [searchResults, setSearchResults] = useState([]);
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const [validationMessage, setValidationMessage] = useState('');
@@ -37,7 +38,9 @@ export function RationCardSearch({ value, onChange, onValidation }: RationCardSe
     
     setIsValidating(true);
     try {
-      const response = await fetch(`/api/ration-cards/validate/${cardNumber}`);
+      const response = await fetch(
+        `/api/ration-cards/validate/${cardNumber}${allowRegistered ? "?allowRegistered=true" : ""}`
+      );
       const result = await response.json();
       
       setIsValid(result.valid);

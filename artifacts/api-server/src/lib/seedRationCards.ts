@@ -39,7 +39,7 @@ const sampleRationCards = [
     address: "789 Pine Rd, Mysore - 570001"
   },
   {
-    rationCardNumber: "KA-BNG-2024-004",
+    rationCardNumber: "KA-BNG-2024-120",
     holderName: "Pavithra",
     cardType: "BPL",
     familyMembers: [

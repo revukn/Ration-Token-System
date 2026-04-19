@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { RationCardSearch } from "@/components/ui/ration-card-search";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 
@@ -29,6 +30,7 @@ export default function Login() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const loginMutation = useLoginUser();
+  const [rationCardValid, setRationCardValid] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -81,14 +83,15 @@ export default function Login() {
                 <FormField
                   control={form.control}
                   name="rationCardNumber"
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem>
                       <FormLabel>Ration Card Number</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="e.g., KA-BNG-2024-001" 
-                          className="uppercase"
-                          {...field} 
+                        <RationCardSearch
+                          value={form.watch("rationCardNumber")}
+                          onChange={(value) => form.setValue("rationCardNumber", value)}
+                          onValidation={(valid, message) => setRationCardValid(valid)}
+                          allowRegistered
                         />
                       </FormControl>
                       <FormMessage />
@@ -111,7 +114,7 @@ export default function Login() {
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={loginMutation.isPending}
+                  disabled={loginMutation.isPending || !rationCardValid}
                 >
                   {loginMutation.isPending ? "Logging in..." : "Login"}
                 </Button>

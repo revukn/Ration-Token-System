@@ -91,7 +91,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginBody"
+              $ref: "#/components/schemas/AdminLoginBody"
       responses:
         "200":
           description: Admin login successful
@@ -401,21 +401,32 @@ components:
       properties:
         name:
           type: string
-        address:
-          type: string
         email:
           type: string
           format: email
         password:
           type: string
           minLength: 6
+        rationCardNumber:
+          type: string
       required:
         - name
-        - address
         - email
         - password
+        - rationCardNumber
 
     LoginBody:
+      type: object
+      properties:
+        rationCardNumber:
+          type: string
+        password:
+          type: string
+      required:
+        - rationCardNumber
+        - password
+
+    AdminLoginBody:
       type: object
       properties:
         email:
@@ -447,8 +458,6 @@ components:
           type: string
         email:
           type: string
-        address:
-          type: string
         role:
           type: string
           enum: [user, admin]
@@ -456,7 +465,6 @@ components:
         - id
         - name
         - email
-        - address
         - role
 
     VerifyRationCardBody:

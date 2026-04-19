@@ -16,14 +16,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { RationCardSearch } from "@/components/ui/ration-card-search";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  lastName: z.string().optional(),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   rationCardNumber: z.string().min(10, "Please enter a valid ration card number"),
@@ -48,8 +47,19 @@ export default function Register() {
   });
 
   const onSubmit = (values: z.infer<typeof registerSchema>) => {
+    const fullName = values.lastName 
+      ? `${values.firstName} ${values.lastName}` 
+      : values.firstName;
+    
     registerMutation.mutate(
-      { data: values },
+      { 
+        data: {
+          name: fullName,
+          email: values.email,
+          password: values.password,
+          rationCardNumber: values.rationCardNumber,
+        }
+      },
       {
         onSuccess: (response) => {
           queryClient.setQueryData(getGetCurrentUserQueryKey(), response.user);
@@ -91,7 +101,7 @@ export default function Register() {
                       <FormItem>
                         <FormLabel>First Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="John" {...field} />
+                          <Input placeholder="Enter first name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -104,7 +114,7 @@ export default function Register() {
                       <FormItem>
                         <FormLabel>Last Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Doe" {...field} />
+                          <Input placeholder="Enter last name (optional)" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -118,7 +128,7 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input placeholder="name@example.com" {...field} />
+                        <Input placeholder="Enter your email address" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -131,25 +141,29 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input type="password" placeholder="Enter your password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <div className="space-y-2">
-                  <FormLabel>Ration Card Number</FormLabel>
-                  <RationCardSearch
-                    value={form.watch("rationCardNumber")}
-                    onChange={(value) => form.setValue("rationCardNumber", value)}
-                    onValidation={(valid, message) => setRationCardValid(valid)}
-                  />
-                  {form.formState.errors.rationCardNumber && (
-                    <p className="text-sm text-red-600">
-                      {form.formState.errors.rationCardNumber.message}
-                    </p>
+                <FormField
+                  control={form.control}
+                  name="rationCardNumber"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Ration Card Number</FormLabel>
+                      <FormControl>
+                        <RationCardSearch
+                          value={form.watch("rationCardNumber")}
+                          onChange={(value) => form.setValue("rationCardNumber", value)}
+                          onValidation={(valid, message) => setRationCardValid(valid)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
+                />
                 <Button 
                   type="submit" 
                   className="w-full" 

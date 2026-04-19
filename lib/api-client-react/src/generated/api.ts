@@ -27,6 +27,7 @@ import type {
   GetAllTokensParams,
   HealthStatus,
   LoginBody,
+  AdminLoginBody,
   MessageResponse,
   RationCardDetails,
   RationToken,
@@ -302,7 +303,7 @@ export const getAdminLoginUrl = () => {
 };
 
 export const adminLogin = async (
-  loginBody: LoginBody,
+  loginBody: AdminLoginBody,
   options?: RequestInit,
 ): Promise<AuthResponse> => {
   return customFetch<AuthResponse>(getAdminLoginUrl(), {
@@ -341,7 +342,7 @@ export const getAdminLoginMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof adminLogin>>,
-    { data: BodyType<LoginBody> }
+    { data: BodyType<AdminLoginBody> }
   > = (props) => {
     const { data } = props ?? {};
 
@@ -354,7 +355,7 @@ export const getAdminLoginMutationOptions = <
 export type AdminLoginMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminLogin>>
 >;
-export type AdminLoginMutationBody = BodyType<LoginBody>;
+export type AdminLoginMutationBody = BodyType<AdminLoginBody>;
 export type AdminLoginMutationError = ErrorType<ErrorResponse>;
 
 /**
@@ -367,14 +368,14 @@ export const useAdminLogin = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof adminLogin>>,
     TError,
-    { data: BodyType<LoginBody> },
+    { data: BodyType<AdminLoginBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof adminLogin>>,
   TError,
-  { data: BodyType<LoginBody> },
+  { data: BodyType<AdminLoginBody> },
   TContext
 > => {
   return useMutation(getAdminLoginMutationOptions(options));

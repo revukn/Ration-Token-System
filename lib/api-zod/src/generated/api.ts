@@ -21,16 +21,16 @@ export const registerUserBodyPasswordMin = 6;
 
 export const RegisterUserBody = zod.object({
   name: zod.string(),
-  address: zod.string(),
   email: zod.string().email(),
   password: zod.string().min(registerUserBodyPasswordMin),
+  rationCardNumber: zod.string(),
 });
 
 /**
  * @summary Login user
  */
 export const LoginUserBody = zod.object({
-  email: zod.string().email(),
+  rationCardNumber: zod.string(),
   password: zod.string(),
 });
 
@@ -39,7 +39,6 @@ export const LoginUserResponse = zod.object({
     id: zod.number(),
     name: zod.string(),
     email: zod.string(),
-    address: zod.string(),
     role: zod.enum(["user", "admin"]),
   }),
   message: zod.string(),
@@ -58,7 +57,6 @@ export const AdminLoginResponse = zod.object({
     id: zod.number(),
     name: zod.string(),
     email: zod.string(),
-    address: zod.string(),
     role: zod.enum(["user", "admin"]),
   }),
   message: zod.string(),
@@ -71,7 +69,6 @@ export const GetCurrentUserResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
   email: zod.string(),
-  address: zod.string(),
   role: zod.enum(["user", "admin"]),
 });
 

@@ -49,12 +49,14 @@ router.get("/ration-cards/validate/:cardNumber", async (req, res): Promise<void>
       });
       return;
     }
+
+    const allowRegistered = req.query.allowRegistered === "true";
     
     // Check if card is already registered to a user
     const User = (await import("@workspace/db")).User;
     const existingUser = await User.findOne({ rationCardNumber: cardNumber });
     
-    if (existingUser) {
+    if (existingUser && !allowRegistered) {
       res.json({ 
         valid: false, 
         message: "This ration card is already registered" 

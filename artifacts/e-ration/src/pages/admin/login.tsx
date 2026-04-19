@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -113,6 +113,21 @@ export default function AdminLogin() {
               </form>
             </Form>
           </CardContent>
+          <CardFooter className="border-t bg-muted/50 px-6 py-4">
+            <div className="text-sm text-muted-foreground text-center">
+              Need citizen access?
+            </div>
+            <div className="mt-3">
+              <Link href="/">
+                <button
+                  type="button"
+                  className="w-full py-2 px-4 rounded-md border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-white transition-colors"
+                >
+                  Citizen Login Portal
+                </button>
+              </Link>
+            </div>
+          </CardFooter>
         </Card>
         <div className="text-center text-slate-400 text-xs flex flex-col gap-1">
           <span>Karnataka State Government E-Ration Administration</span>

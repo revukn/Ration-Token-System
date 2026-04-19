@@ -19,13 +19,18 @@ export interface MessageResponse {
 
 export interface RegisterBody {
   name: string;
-  address: string;
   email: string;
   /** @minLength 6 */
   password: string;
+  rationCardNumber: string;
 }
 
 export interface LoginBody {
+  rationCardNumber: string;
+  password: string;
+}
+
+export interface AdminLoginBody {
   email: string;
   password: string;
 }
@@ -42,7 +47,6 @@ export interface UserProfile {
   id: number;
   name: string;
   email: string;
-  address: string;
   role: UserProfileRole;
 }
 
