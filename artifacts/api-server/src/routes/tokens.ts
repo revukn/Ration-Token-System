@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { Token, User } from "@workspace/db";
+import { Token, User, RationCard } from "@workspace/db";
 import { GenerateTokenBody, GetAllTokensQueryParams } from "@workspace/api-zod";
 import { sendTokenConfirmationEmail } from "../lib/mailer";
 import { getRationEntitlement, generateRationMessage } from "../services/rationService";
@@ -59,7 +59,8 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
     // Get user details for ration calculation
     const user = await User.findById(userId);
     const cardType = user?.rationCardType || 'BPL';
-    const familyMembers = user?.familyMemberDetails?.length || 0;
+    const rationCard = await RationCard.findOne({ rationCardNumber: parsed.data.rationCardNumber });
+    const familyMembers = rationCard?.familyMembers?.length || 0;
     
     // Calculate ration entitlement
     const entitlement = getRationEntitlement(cardType, familyMembers);
