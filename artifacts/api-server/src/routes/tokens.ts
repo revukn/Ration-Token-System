@@ -59,7 +59,7 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
     // Get user details for ration calculation
     const user = await User.findById(userId);
     const cardType = user?.rationCardType || 'BPL';
-    const familyMembers = user?.familyMemberDetails?.length || 1;
+    const familyMembers = user?.familyMemberDetails?.length || 0;
     
     // Calculate ration entitlement
     const entitlement = getRationEntitlement(cardType, familyMembers);

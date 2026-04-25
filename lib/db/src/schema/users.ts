@@ -20,8 +20,8 @@ const userSchema = new mongoose.Schema({
   familyMemberDetails: [{ 
     name: { type: String, required: true },
     age: { type: Number, required: true },
-    relation: { type: String, required: true }, // e.g., "Father", "Mother", "Son", "Daughter"
-    isPrimary: { type: Boolean, default: false } // Mark primary card holder
+    relation: { type: String, required: true },
+    isPrimary: { type: Boolean, default: false } 
   }],
   role: { type: String, enum: userRoleEnum, default: "user" },
   createdAt: { type: Date, default: Date.now }
