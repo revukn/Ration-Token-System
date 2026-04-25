@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { Token, User, RationCard } from "@workspace/db";
 import { GenerateTokenBody, GetAllTokensQueryParams } from "@workspace/api-zod";
-import { sendTokenConfirmationEmail } from "../lib/mailer";
+import { sendTokenConfirmationEmail, sendRationDistributionEmail } from "../lib/mailer";
 import { getRationEntitlement, generateRationMessage } from "../services/rationService";
 
 const router: IRouter = Router();
@@ -271,18 +271,48 @@ router.post("/admin/tokens/bulk-distribute", async (req, res): Promise<void> => 
   }
 
   try {
+    // Get the tokens with user and ration card details before updating
+    const tokensToDistribute = await Token.find({ 
+      _id: { $in: tokenIds }, 
+      status: "verified" 
+    }).populate('userId').populate('rationCardId');
+
+    if (tokensToDistribute.length === 0) {
+      res.status(400).json({ message: "No verified tokens found to distribute" });
+      return;
+    }
+
+    // Update token status
     const tokens = await Token.updateMany(
       { _id: { $in: tokenIds }, status: "verified" },
       { status: "distributed", updatedAt: new Date() }
     );
 
-    if (tokens.modifiedCount === 0) {
-      res.status(400).json({ message: "No verified tokens found to distribute" });
-      return;
-    }
+    // Send distribution emails to all users
+    const emailPromises = tokensToDistribute.map(async (token) => {
+      try {
+        const user = token.userId as any;
+        const rationCard = token.rationCardId as any;
+        
+        if (user?.email && rationCard) {
+          await sendRationDistributionEmail(user.email, {
+            rationCardNumber: rationCard.cardNumber,
+            cardType: rationCard.cardType,
+            familyMembers: rationCard.familyMembers,
+            shopName: token.shopName || "Main Ration Center"
+          });
+          req.log.info({ userEmail: user.email, tokenNumber: token.tokenNumber }, "Distribution email sent");
+        }
+      } catch (emailError) {
+        req.log.error({ emailError, tokenNumber: token.tokenNumber }, "Failed to send distribution email");
+      }
+    });
+
+    // Wait for all emails to be sent
+    await Promise.allSettled(emailPromises);
 
     res.json({
-      message: `Successfully distributed ${tokens.modifiedCount} tokens`,
+      message: `Successfully distributed ${tokens.modifiedCount} tokens and sent notifications`,
       distributedCount: tokens.modifiedCount
     });
   } catch (error) {

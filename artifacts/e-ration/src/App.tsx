@@ -12,6 +12,7 @@ import MyTokens from "@/pages/my-tokens";
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminTokens from "@/pages/admin/tokens";
+import AdminNotify from "@/pages/admin/notify";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/tokens" component={AdminTokens} />
+      <Route path="/admin/notify" component={AdminNotify} />
       
       <Route component={NotFound} />
     </Switch>
