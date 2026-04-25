@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Calendar, Send, Mail, Users, CheckCircle, AlertCircle } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export default function NotifyPage() {
   const [selectedDate, setSelectedDate] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [results, setResults] = useState(null);
+  const { toast } = useToast();
 
   const handleSendNotification = async () => {
     if (!selectedDate) {
