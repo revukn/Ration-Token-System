@@ -130,6 +130,7 @@ router.get("/tokens/my-tokens", async (req, res): Promise<void> => {
       status: t.status,
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
+      rationDetails: t.rationDetails,
     })),
   );
 });
