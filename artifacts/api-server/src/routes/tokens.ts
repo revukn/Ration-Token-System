@@ -241,6 +241,24 @@ router.post("/admin/tokens/:tokenId/distribute", async (req, res): Promise<void>
     return;
   }
 
+  // Send distribution email to the user
+  let emailSent = false;
+  const userEmail = (token.userId as any)?.email;
+  if (userEmail && token.rationDetails) {
+    try {
+      const emailResult = await sendRationDistributionEmail(userEmail, {
+        rationCardNumber: token.rationCardNumber,
+        cardType: token.rationDetails.cardType,
+        familyMembers: token.rationDetails.familyMembers,
+        shopName: token.rationDetails.shopName || "Main Ration Center"
+      });
+      emailSent = emailResult.success;
+      req.log.info({ userEmail, tokenNumber: token.tokenNumber, emailSent }, "Distribution email attempt");
+    } catch (emailError) {
+      req.log.error({ emailError, tokenNumber: token.tokenNumber }, "Failed to send distribution email");
+    }
+  }
+
   res.json({
     id: token._id.toString(),
     tokenNumber: token.tokenNumber,
@@ -253,6 +271,7 @@ router.post("/admin/tokens/:tokenId/distribute", async (req, res): Promise<void>
     status: token.status,
     createdAt: token.createdAt.toISOString(),
     updatedAt: token.updatedAt.toISOString(),
+    emailSent,
   });
 });
 

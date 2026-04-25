@@ -220,9 +220,9 @@ export async function sendRationDistributionEmail(
     
     logger.info({ to: toEmail, messageId: info.messageId }, "Ration distribution email sent");
     return { success: true, messageId: info.messageId };
-  } catch (err) {
+  } catch (err: any) {
     logger.error({ err, to: toEmail }, "Failed to send ration distribution email");
-    return { success: false, error: err.message };
+    return { success: false, error: err?.message || String(err) };
   }
 }
 
@@ -295,8 +295,8 @@ export async function sendBulkRationCollectionNotification(
         
         results.push({ email: user.email, success: true, messageId: info.messageId });
         logger.info({ to: user.email, messageId: info.messageId }, "Bulk ration reminder email sent");
-      } catch (error) {
-        results.push({ email: user.email, success: false, error: error.message });
+      } catch (error: any) {
+        results.push({ email: user.email, success: false, error: error?.message || String(error) });
         logger.error({ error, to: user.email }, "Failed to send bulk ration reminder email");
       }
     }

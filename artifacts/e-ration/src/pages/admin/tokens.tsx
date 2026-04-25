@@ -100,11 +100,19 @@ export default function AdminTokens() {
     mutation.mutate(
       { tokenId: id },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
           queryClient.invalidateQueries({ queryKey: getGetAllTokensQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetAdminDashboardStatsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetRecentActivityQueryKey() });
           toast({ title: `Token marked as ${action}d successfully` });
+          if (data?.emailSent) {
+            setTimeout(() => {
+              toast({
+                title: "Distribution Email Sent To User",
+                description: `Email sent to ${data.userEmail || 'user'} with ration details`,
+              });
+            }, 1500);
+          }
         },
         onError: (err: any) => {
           toast({ 
@@ -203,11 +211,10 @@ export default function AdminTokens() {
         description: result.message || `Successfully distributed ${selectedTokens.length} tokens`,
       });
 
-      // Show email notification toast
       if (result.emailsSent > 0) {
         setTimeout(() => {
           toast({
-            title: "Distribution Emails Sent",
+            title: "Distribution Emails Sent To User",
             description: `Successfully sent ${result.emailsSent} distribution email${result.emailsSent > 1 ? 's' : ''} to users`,
           });
         }, 1500);
