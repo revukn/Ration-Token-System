@@ -26,7 +26,7 @@ export default function NotifyPage() {
     setResults(null);
 
     try {
-      const response = await fetch('/notify/send-bulk-email', {
+      const response = await fetch('/api/notify/send-bulk-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
