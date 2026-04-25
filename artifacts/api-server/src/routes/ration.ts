@@ -275,39 +275,23 @@ router.post("/notify/send-bulk-email", async (req, res): Promise<void> => {
   }
 
   try {
-    // Get user IDs who already have verified or distributed tokens (they already visited the store)
-    const currentMonth = new Date().toLocaleString('default', { month: 'long' });
-    const currentYear = new Date().getFullYear();
-    const tokensWithVerifiedStatus = await Token.find({
-      status: { $in: ["verified", "distributed"] },
-      "rationDetails.month": currentMonth,
-      "rationDetails.year": currentYear
-    }).select('userId');
-    const excludedUserIds = tokensWithVerifiedStatus.map((t: any) => t.userId);
-
-    // Get all registered users excluding admins and users with verified/distributed tokens
-    const allNonAdminUsers = await User.find({
-      email: { $exists: true, $ne: null },
-      role: { $ne: "admin" },
+    // Get ALL registered users (non-admin, with valid email)
+    const users = await User.find({
+      email: { $exists: true, $ne: null, $nin: [""] },
+      role: "user",
     }).select('firstName lastName email');
 
-    const users = allNonAdminUsers.filter(
-      (user) => !excludedUserIds.some((id: any) => id.toString() === user._id.toString())
-    );
-
     if (users.length === 0) {
-      res.status(404).json({ 
-        message: "No eligible users found",
-        totalRegistered: allNonAdminUsers.length,
-        excludedCount: excludedUserIds.length,
-        registeredEmails: allNonAdminUsers.map((u) => u.email),
+      res.json({ 
+        message: "No registered users found",
+        totalUsers: 0,
       });
       return;
     }
 
-    // Send bulk notification
+    // Send bulk notification to ALL registered users
     const notificationResult = await sendBulkRationCollectionNotification(
-      users.map(user => ({ email: user.email, name: `${user.firstName} ${user.lastName}` || 'Beneficiary' })),
+      users.map((user: any) => ({ email: user.email, name: `${user.firstName} ${user.lastName}` || 'Beneficiary' })),
       collectionDate
     );
 
@@ -325,8 +309,7 @@ router.post("/notify/send-bulk-email", async (req, res): Promise<void> => {
         totalSent: notificationResult.totalSent,
         totalFailed: notificationResult.totalFailed,
         collectionDate,
-        excludedCount: excludedUserIds.length,
-        sentToEmails: users.map((u) => u.email),
+        sentToEmails: users.map((u: any) => u.email),
       });
     } else {
       req.log.error({ error: notificationResult.error }, "Failed to send bulk notification");

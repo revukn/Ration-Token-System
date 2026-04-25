@@ -272,6 +272,11 @@ export async function sendBulkRationCollectionNotification(
           <p style="color: #2c3e50; line-height: 1.6;">ಪ್ರಿಯ ಫಲಾನುಭವಿಗಳೇ, ದಯವಿಟ್ಟು ಟೋಕನ್ ಅನ್ನು ಜನರೇಟ್ ಮಾಡಿ ಇಲ್ಲದಿದ್ದರೆ, ನೀವು ಈಗಾಗಲೇ ಟೋಕನ್ ಅನ್ನು ಜನರೇಟ್ ಮಾಡಿದ್ದರೆ, ಈ ದಿನಾಂಕದಂದು (${formattedDate}) ನಿಮ್ಮ ಹತ್ತಿರದ ಪಡಿತರ ಕೇಂದ್ರಕ್ಕೆ ಬಂದು ಪಡಿತರವನ್ನು ಸಂಗ್ರಹಿಸಿ.</p>
         </div>
         
+        <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #ff9800; text-align: center;">
+          <h3 style="color: #e65100; margin: 0 0 8px 0; font-size: 18px;">⚠️ If you have already collected the ration, please ignore this message.</h3>
+          <p style="color: #e65100; margin: 0; font-size: 15px; font-weight: bold;">⚠️ ನೀವು ಈಗಾಗಲೇ ಪಡಿತರವನ್ನು ಸಂಗ್ರಹಿಸಿದ್ದರೆ, ದಯವಿಟ್ಟು ಈ ಸಂದೇಶವನ್ನು ನಿರ್ಲಕ್ಷಿಸಿ.</p>
+        </div>
+
         <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #dc3545;">
           <h4 style="color: #721c24; margin-top: 0;">Important Instructions:</h4>
           <ul style="color: #721c24; margin: 10px 0; padding-left: 20px;">
