@@ -228,15 +228,8 @@ export default function AdminTokens() {
     }
   };
 
-  // Filter tokens based on status and search
-  const filteredTokens = tokens?.filter(token => {
-    const matchesStatus = statusFilter === "all" || token.status === statusFilter;
-    const matchesSearch = !search || 
-      token.tokenNumber.toLowerCase().includes(search.toLowerCase()) ||
-      token.rationCardNumber.toLowerCase().includes(search.toLowerCase()) ||
-      token.holderName.toLowerCase().includes(search.toLowerCase());
-    return matchesStatus && matchesSearch;
-  }) || [];
+  // Tokens are already filtered by the API, so no need to filter again
+  const filteredTokens = tokens || [];
 
   return (
     <AdminLayout>
