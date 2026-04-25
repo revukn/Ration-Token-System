@@ -56,10 +56,10 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
 
     const tokenNumber = generateTokenNumber();
 
-    // Get user details for ration calculation
+    // Get user and ration card details for ration calculation
     const user = await User.findById(userId);
-    const cardType = user?.rationCardType || 'BPL';
     const rationCard = await RationCard.findOne({ rationCardNumber: parsed.data.rationCardNumber });
+    const cardType = rationCard?.cardType ;
     const familyMembers = rationCard?.familyMembers?.length || 0;
     
     // Calculate ration entitlement
