@@ -9,7 +9,7 @@ interface RationDetailsProps {
 }
 
 export const RationDetails = ({ token, onBack, onClose }: RationDetailsProps) => {
-  const { rationDetails } = token;
+  const rationDetails = token.rationDetails;
   
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
