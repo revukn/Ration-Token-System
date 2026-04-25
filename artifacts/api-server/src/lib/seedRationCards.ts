@@ -4,13 +4,13 @@ import { logger } from "./logger";
 const sampleRationCards = [
   {
     rationCardNumber: "KA-BNG-2024-001",
-    holderName: "Revanna",
+    holderName: "Revanna km",
     cardType: "BPL",
     familyMembers: [
-      { name: "Revanna", age: 48, relation: "Self", aadharCardNumber: "123456784523" },
-      { name: "Jayanthi Revanna", age: 43, relation: "Wife", aadharCardNumber: "987654327891" },
-      { name: "Suresh Revanna", age: 22, relation: "Son", aadharCardNumber: "567890123456" },
-      { name: "Geetha Revanna", age: 18, relation: "Daughter", aadharCardNumber: "345678906789" }
+      { name: "Revanna km", age: 21, relation: "Self", aadharCardNumber: "123456784523" },
+      { name: "Jayanthi ", age: 43, relation: "Wife", aadharCardNumber: "987654327891" },
+      { name: "Suresh ", age: 22, relation: "Son", aadharCardNumber: "567890123456" },
+      { name: "Geetha ", age: 18, relation: "Daughter", aadharCardNumber: "345678906789" }
     ],
     address: "123 Main St, Bangalore North, Bangalore - 560001"
   },
@@ -19,7 +19,7 @@ const sampleRationCards = [
     holderName: "Jayanth",
     cardType: "AAY",
     familyMembers: [
-      { name: "Jayanth", age: 40, relation: "Self", aadharCardNumber: "234567890123" },
+      { name: "Jayanth", age: 21, relation: "Self", aadharCardNumber: "234567890123" },
       { name: "Savitha Jayanth", age: 37, relation: "Wife", aadharCardNumber: "890123456789" },
       { name: "Rahul Jayanth", age: 15, relation: "Son", aadharCardNumber: "456789901234" },
       { name: "Divya Jayanth", age: 12, relation: "Daughter", aadharCardNumber: "678901233444" }
@@ -28,13 +28,13 @@ const sampleRationCards = [
   },
   {
     rationCardNumber: "KA-MYS-2024-003",
-    holderName: "Basapa",
+    holderName: "NandiBasappa",
     cardType: "PHH",
     familyMembers: [
-      { name: "Basapa", age: 55, relation: "Self", aadharCardNumber: "789012342345" },
-      { name: "Kamala Basapa", age: 50, relation: "Wife", aadharCardNumber: "123456786780" },
-      { name: "Ravi Basapa", age: 28, relation: "Son", aadharCardNumber: "345678901122" },
-      { name: "Shanthi Basapa", age: 24, relation: "Daughter", aadharCardNumber: "567890124455" }
+      { name: "NandiBasappa", age: 21, relation: "Self", aadharCardNumber: "789012342345" },
+      { name: "Mahadevappa", age: 50, relation: "Father", aadharCardNumber: "123456786780" },
+      { name: "Mahadevamma", age: 28, relation: "Mother", aadharCardNumber: "345678901122" },
+      { name: "Manoj", age: 24, relation: "Brother", aadharCardNumber: "567890124455" }
     ],
     address: "789 Pine Rd, Mysore - 570001"
   },
@@ -61,13 +61,13 @@ const sampleRationCards = [
   },
   {
     rationCardNumber: "KA-MYS-2024-006",
-    holderName: "Latha",
+    holderName: "Sanjana s",
     cardType: "PHH",
     familyMembers: [
-      { name: "Latha", age: 35, relation: "Self", aadharCardNumber: "666677778888" },
-      { name: "Ayush", age: 45, relation: "Husband", aadharCardNumber: "999900001111" },
-      { name: "Mourya", age: 15, relation: "Son", aadharCardNumber: "222233338888" },
-      { name: "Arushi", age: 8, relation: "Daughter", aadharCardNumber: "444455559999" }
+      { name: "Sanjana s", age: 21, relation: "Self", aadharCardNumber: "666677778888" },
+      { name: "swetha", age: 45, relation: "mother", aadharCardNumber: "999900001111" },
+      { name: "kumar", age: 15, relation: "father", aadharCardNumber: "222233338888" },
+      { name: "hemashree", age: 8, relation: "sister", aadharCardNumber: "444455559999" }
     ],
     address: "987 Cedar Ln, Mysore - 570002"
   },
