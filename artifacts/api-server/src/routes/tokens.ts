@@ -289,33 +289,31 @@ router.post("/admin/tokens/bulk-distribute", async (req, res): Promise<void> => 
     );
 
     // Send distribution emails to all users
+    let emailsSent = 0;
+    let emailsFailed = 0;
+    
     const emailPromises = tokensToDistribute.map(async (token) => {
       try {
         const user = token.userId as any;
         
-        req.log.info({ 
-          tokenNumber: token.tokenNumber, 
-          userEmail: user?.email, 
-          hasRationDetails: !!token.rationDetails,
-          rationCardNumber: token.rationCardNumber 
-        }, "Preparing to send distribution email");
-        
         if (user?.email && token.rationDetails) {
-          await sendRationDistributionEmail(user.email, {
+          const emailResult = await sendRationDistributionEmail(user.email, {
             rationCardNumber: token.rationCardNumber,
             cardType: token.rationDetails.cardType,
             familyMembers: token.rationDetails.familyMembers,
             shopName: token.rationDetails.shopName || "Main Ration Center"
           });
-          req.log.info({ userEmail: user.email, tokenNumber: token.tokenNumber }, "Distribution email sent successfully");
-        } else {
-          req.log.warn({ 
-            tokenNumber: token.tokenNumber, 
-            userEmail: user?.email, 
-            hasRationDetails: !!token.rationDetails 
-          }, "Skipping email - missing user email or ration details");
+          
+          if (emailResult.success) {
+            emailsSent++;
+            req.log.info({ userEmail: user.email, tokenNumber: token.tokenNumber }, "Distribution email sent successfully");
+          } else {
+            emailsFailed++;
+            req.log.error({ userEmail: user.email, error: emailResult.error }, "Failed to send distribution email");
+          }
         }
       } catch (emailError) {
+        emailsFailed++;
         req.log.error({ emailError, tokenNumber: token.tokenNumber }, "Failed to send distribution email");
       }
     });
@@ -324,8 +322,10 @@ router.post("/admin/tokens/bulk-distribute", async (req, res): Promise<void> => 
     await Promise.allSettled(emailPromises);
 
     res.json({
-      message: `Successfully distributed ${tokens.modifiedCount} tokens and sent notifications`,
-      distributedCount: tokens.modifiedCount
+      message: `Successfully distributed ${tokens.modifiedCount} tokens`,
+      distributedCount: tokens.modifiedCount,
+      emailsSent,
+      emailsFailed
     });
   } catch (error) {
     console.error("Bulk distribute error:", error);

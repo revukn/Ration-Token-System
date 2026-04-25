@@ -203,6 +203,16 @@ export default function AdminTokens() {
         description: result.message || `Successfully distributed ${selectedTokens.length} tokens`,
       });
 
+      // Show email notification toast
+      if (result.emailsSent > 0) {
+        setTimeout(() => {
+          toast({
+            title: "Distribution Emails Sent",
+            description: `Successfully sent ${result.emailsSent} distribution email${result.emailsSent > 1 ? 's' : ''} to users`,
+          });
+        }, 1500);
+      }
+
       setSelectedTokens([]);
       queryClient.invalidateQueries({ queryKey: getGetAllTokensQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetAdminDashboardStatsQueryKey() });
