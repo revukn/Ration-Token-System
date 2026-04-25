@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { Token, User } from "@workspace/db";
 import { GenerateTokenBody, GetAllTokensQueryParams } from "@workspace/api-zod";
 import { sendTokenConfirmationEmail } from "../lib/mailer";
+import { getRationEntitlement, generateRationMessage } from "../services/rationService";
 
 const router: IRouter = Router();
 
@@ -55,6 +56,14 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
 
     const tokenNumber = generateTokenNumber();
 
+    // Get user details for ration calculation
+    const user = await User.findById(userId);
+    const cardType = user?.rationCardType || 'BPL';
+    const familyMembers = parsed.data.selectedMembers.length;
+    
+    // Calculate ration entitlement
+    const entitlement = getRationEntitlement(cardType, familyMembers);
+    
     const token = await Token.create({
     tokenNumber,
     rationCardNumber: parsed.data.rationCardNumber,
@@ -63,13 +72,20 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
     verificationType: parsed.data.verificationType,
     status: "pending",
     userId,
+    rationDetails: {
+      cardType,
+      familyMembers,
+      entitlement,
+      month: new Date().toLocaleString('default', { month: 'long' }),
+      year: new Date().getFullYear(),
+      shopName: user?.fairPriceShop || "FPS-001"
+    }
   });
 
-  const user = await User.findById(userId);
   if (user) {
     sendTokenConfirmationEmail(
       user.email,
-      user.name,
+      `${user.firstName} ${user.lastName}`,
       token.tokenNumber,
       token.rationCardNumber,
       token.selectedMembers as string[],
@@ -87,6 +103,7 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
     status: token.status,
     createdAt: token.createdAt.toISOString(),
     updatedAt: token.updatedAt.toISOString(),
+    rationDetails: token.rationDetails,
   });
   } catch (error) {
     res.status(500).json({ message: "Failed to generate token" });

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { z } from "zod/v4";
 
 export const userRoleEnum = ["user", "admin"] as const;
+export const rationCardTypeEnum = ["AAY", "BPL", "PHH", "APL"] as const;
 
 const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
@@ -9,6 +10,13 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   rationCardNumber: { type: String, required: true, unique: true },
+  rationCardType: { 
+    type: String, 
+    enum: rationCardTypeEnum, 
+    required: true,
+    default: 'BPL'
+  },
+  fairPriceShop: { type: String, default: "FPS-001" },
   role: { type: String, enum: userRoleEnum, default: "user" },
   createdAt: { type: Date, default: Date.now }
 });
@@ -21,6 +29,8 @@ export const insertUserSchema = z.object({
   email: z.string().email(),
   password: z.string(),
   rationCardNumber: z.string(),
+  rationCardType: z.enum(rationCardTypeEnum).optional(),
+  fairPriceShop: z.string().optional(),
   role: z.enum(userRoleEnum).optional()
 });
 

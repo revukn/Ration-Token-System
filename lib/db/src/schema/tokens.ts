@@ -12,6 +12,19 @@ const tokenSchema = new mongoose.Schema({
   verificationType: { type: String, enum: verificationTypeEnum, required: true },
   status: { type: String, enum: tokenStatusEnum, default: "pending" },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  rationDetails: {
+    cardType: { type: String, enum: ["AAY", "BPL", "PHH", "APL"], required: true },
+    familyMembers: { type: Number, required: true },
+    entitlement: {
+      rice: { type: Number, required: true },
+      ragiWheat: { type: Number, required: true },
+      sugar: { type: Number, required: true },
+      kerosene: { type: Number, required: true }
+    },
+    month: { type: String, required: true },
+    year: { type: Number, required: true },
+    shopName: { type: String, required: true }
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

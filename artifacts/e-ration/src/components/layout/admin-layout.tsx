@@ -78,11 +78,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3 mb-4 px-2">
             <Avatar className="h-9 w-9 border">
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                {user?.name?.charAt(0).toUpperCase() || "A"}
+                {"GA"}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col truncate">
-              <span className="text-sm font-medium truncate">{user?.name}</span>
+              <span className="text-sm font-medium truncate">GovtAdmin</span>
               <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
             </div>
           </div>

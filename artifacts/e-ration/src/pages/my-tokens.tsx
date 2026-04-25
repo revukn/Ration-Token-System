@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { QrCode, Calendar, Users, Hash, ShieldCheck, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { RationDetails } from "@/components/ration-details";
 
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
@@ -26,20 +27,38 @@ const StatusBadge = ({ status }: { status: string }) => {
 export default function MyTokens() {
   const { data: tokens, isLoading } = useGetMyTokens();
   const [, setLocation] = useLocation();
+  const [showRationDetails, setShowRationDetails] = useState(false);
+  const [selectedToken, setSelectedToken] = useState(null);
+  
+  const handleRationDetails = (token: any) => {
+    setSelectedToken(token);
+    setShowRationDetails(true);
+  };
+  
+  const handleBack = () => {
+    setShowRationDetails(false);
+  };
+  
+  const handleClose = () => {
+    setShowRationDetails(false);
+    setSelectedToken(null);
+  };
 
   return (
     <UserLayout>
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button className="w-full gap-2" onClick={() => setLocation("/dashboard")}>
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">My Ration Tokens</h1>
-          <p className="text-muted-foreground">View and present your generated tokens at the ration shop.</p>
-        </div>
+        {!showRationDetails ? (
+          <>
+            <div className="flex items-center gap-4">
+              <Button className="w-full gap-2" onClick={() => setLocation("/dashboard")}>
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight mb-2">My Ration Tokens</h1>
+              <p className="text-muted-foreground">View and present your generated tokens at the ration shop.</p>
+            </div>
 
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2">
@@ -127,13 +146,31 @@ export default function MyTokens() {
                   <span className="text-xs text-muted-foreground">
                     Method: <span className="font-medium capitalize">{token.verificationType}</span>
                   </span>
-                  <span className="text-xs font-mono text-muted-foreground">
-                    ID: {token.id.toString().padStart(6, '0')}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-muted-foreground">
+                      ID: {token.id.toString().padStart(6, '0')}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleRationDetails(token)}
+                      className="text-xs"
+                    >
+                      🏛️ Ration Details
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             ))}
           </div>
+        )}
+          </>
+        ) : (
+          <RationDetails
+            token={selectedToken}
+            onBack={handleBack}
+            onClose={handleClose}
+          />
         )}
       </div>
     </UserLayout>
