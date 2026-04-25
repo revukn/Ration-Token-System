@@ -16,8 +16,6 @@ const StatusBadge = ({ status }: { status: string }) => {
       return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>;
     case "verified":
       return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">Verified</Badge>;
-    case "approved":
-      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Approved</Badge>;
     case "distributed":
       return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">Distributed</Badge>;
     default:

@@ -32,7 +32,7 @@ Karnataka Government E-Ration Token System - a web application for digital ratio
 - Admin login (admin@eration.gov.in / admin123)
 - Dashboard with statistics
 - View all tokens with status filtering
-- Verify, approve, and distribute tokens
+- Verify and distribute tokens
 - Recent activity feed
 
 ## Key Commands

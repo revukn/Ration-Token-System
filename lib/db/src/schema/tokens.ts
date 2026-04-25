@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { z } from "zod/v4";
 
-export const tokenStatusEnum = ["pending", "verified", "approved", "distributed"] as const;
+export const tokenStatusEnum = ["pending", "verified", "distributed"] as const;
 export const verificationTypeEnum = ["face", "otp"] as const;
 
 const tokenSchema = new mongoose.Schema({

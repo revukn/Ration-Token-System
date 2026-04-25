@@ -12,6 +12,5 @@ export type RationTokenStatus =
 export const RationTokenStatus = {
   pending: "pending",
   verified: "verified",
-  approved: "approved",
   distributed: "distributed",
 } as const;

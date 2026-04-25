@@ -12,6 +12,5 @@ export type AdminTokenViewStatus =
 export const AdminTokenViewStatus = {
   pending: "pending",
   verified: "verified",
-  approved: "approved",
   distributed: "distributed",
 } as const;

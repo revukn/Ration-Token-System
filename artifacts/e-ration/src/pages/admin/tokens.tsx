@@ -47,8 +47,6 @@ const StatusBadge = ({ status }: { status: string }) => {
       return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</Badge>;
     case "verified":
       return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400">Verified</Badge>;
-    case "approved":
-      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400">Approved</Badge>;
     case "distributed":
       return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400">Distributed</Badge>;
     default:
@@ -236,7 +234,7 @@ export default function AdminTokens() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-1">Token Management</h1>
-            <p className="text-muted-foreground">View, approve and distribute rations to citizens.</p>
+            <p className="text-muted-foreground">View, Verify and distribute rations to citizens.</p>
           </div>
           
           <div className="flex items-center gap-2 w-full md:w-auto">

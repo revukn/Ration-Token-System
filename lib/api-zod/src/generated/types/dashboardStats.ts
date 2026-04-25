@@ -10,7 +10,6 @@ export interface DashboardStats {
   totalTokens: number;
   pendingTokens: number;
   verifiedTokens: number;
-  approvedTokens: number;
   distributedTokens: number;
   todayTokens: number;
 }

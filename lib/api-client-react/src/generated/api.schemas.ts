@@ -126,7 +126,6 @@ export type RationTokenStatus =
 export const RationTokenStatus = {
   pending: "pending",
   verified: "verified",
-  approved: "approved",
   distributed: "distributed",
 } as const;
 
@@ -148,7 +147,6 @@ export type AdminTokenViewStatus =
 export const AdminTokenViewStatus = {
   pending: "pending",
   verified: "verified",
-  approved: "approved",
   distributed: "distributed",
 } as const;
 
@@ -170,7 +168,6 @@ export interface DashboardStats {
   totalTokens: number;
   pendingTokens: number;
   verifiedTokens: number;
-  approvedTokens: number;
   distributedTokens: number;
   todayTokens: number;
 }
@@ -194,6 +191,5 @@ export type GetAllTokensStatus =
 export const GetAllTokensStatus = {
   pending: "pending",
   verified: "verified",
-  approved: "approved",
   distributed: "distributed",
 } as const;

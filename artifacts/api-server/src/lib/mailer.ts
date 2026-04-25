@@ -132,8 +132,8 @@ export async function sendTokenConfirmationEmail(
             </div>
 
             <p style="color: #555; font-size: 14px;">
-              Your token is now under review by the ration authority. You will be notified once it is approved.
-              Visit your nearest ration shop with this token number after approval.
+              Your token is now under review by the ration authority. You will be notified once it is verified.
+              Visit your nearest ration shop with this token number after verification.
             </p>
 
             <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />

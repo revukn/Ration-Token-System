@@ -160,7 +160,7 @@ export const GetMyTokensResponseItem = zod.object({
   holderName: zod.string(),
   selectedMembers: zod.array(zod.string()),
   verificationType: zod.string(),
-  status: zod.enum(["pending", "verified", "approved", "distributed"]),
+  status: zod.enum(["pending", "verified", "distributed"]),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date().optional(),
 });
@@ -171,7 +171,7 @@ export const GetMyTokensResponse = zod.array(GetMyTokensResponseItem);
  */
 export const GetAllTokensQueryParams = zod.object({
   status: zod
-    .enum(["pending", "verified", "approved", "distributed"])
+    .enum(["pending", "verified", "distributed"])
     .optional(),
   search: zod.coerce.string().optional(),
 });
@@ -185,7 +185,7 @@ export const GetAllTokensResponseItem = zod.object({
   userEmail: zod.string(),
   selectedMembers: zod.array(zod.string()),
   verificationType: zod.string(),
-  status: zod.enum(["pending", "verified", "approved", "distributed"]),
+  status: zod.enum(["pending", "verified", "distributed"]),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date().optional(),
 });
@@ -207,28 +207,7 @@ export const VerifyTokenResponse = zod.object({
   userEmail: zod.string(),
   selectedMembers: zod.array(zod.string()),
   verificationType: zod.string(),
-  status: zod.enum(["pending", "verified", "approved", "distributed"]),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date().optional(),
-});
-
-/**
- * @summary Approve ration distribution (admin)
- */
-export const ApproveTokenParams = zod.object({
-  tokenId: zod.coerce.number(),
-});
-
-export const ApproveTokenResponse = zod.object({
-  id: zod.number(),
-  tokenNumber: zod.string(),
-  rationCardNumber: zod.string(),
-  holderName: zod.string(),
-  userName: zod.string(),
-  userEmail: zod.string(),
-  selectedMembers: zod.array(zod.string()),
-  verificationType: zod.string(),
-  status: zod.enum(["pending", "verified", "approved", "distributed"]),
+  status: zod.enum(["pending", "verified", "distributed"]),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date().optional(),
 });
@@ -249,7 +228,7 @@ export const DistributeTokenResponse = zod.object({
   userEmail: zod.string(),
   selectedMembers: zod.array(zod.string()),
   verificationType: zod.string(),
-  status: zod.enum(["pending", "verified", "approved", "distributed"]),
+  status: zod.enum(["pending", "verified", "distributed"]),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date().optional(),
 });
@@ -261,7 +240,6 @@ export const GetAdminDashboardStatsResponse = zod.object({
   totalTokens: zod.number(),
   pendingTokens: zod.number(),
   verifiedTokens: zod.number(),
-  approvedTokens: zod.number(),
   distributedTokens: zod.number(),
   todayTokens: zod.number(),
 });

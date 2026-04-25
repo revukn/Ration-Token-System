@@ -148,11 +148,10 @@ export default function Dashboard() {
                 size="lg"
                 className="w-full sm:w-auto"
                 onClick={() => {
-                  // Check if there's already an active token (pending, verified, approved)
+                  // Check if there's already an active token (pending, verified)
                   const activeToken = myTokens?.find(token => 
                     token.status === "pending" || 
-                    token.status === "verified" || 
-                    token.status === "approved"
+                    token.status === "verified"
                   );
                   
                   if (activeToken) {

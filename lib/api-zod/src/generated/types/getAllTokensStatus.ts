@@ -12,6 +12,5 @@ export type GetAllTokensStatus =
 export const GetAllTokensStatus = {
   pending: "pending",
   verified: "verified",
-  approved: "approved",
   distributed: "distributed",
 } as const;

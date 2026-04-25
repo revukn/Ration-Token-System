@@ -270,7 +270,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [pending, verified, approved, distributed]
+            enum: [pending, verified, distributed]
         - name: search
           in: query
           schema:
@@ -299,25 +299,6 @@ paths:
       responses:
         "200":
           description: Token verified
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AdminTokenView"
-
-  /admin/tokens/{tokenId}/approve:
-    post:
-      operationId: approveToken
-      tags: [admin]
-      summary: Approve ration distribution (admin)
-      parameters:
-        - name: tokenId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Token approved
           content:
             application/json:
               schema:
@@ -601,7 +582,7 @@ components:
           type: string
         status:
           type: string
-          enum: [pending, verified, approved, distributed]
+          enum: [pending, verified, distributed]
         createdAt:
           type: string
           format: date-time
@@ -641,7 +622,7 @@ components:
           type: string
         status:
           type: string
-          enum: [pending, verified, approved, distributed]
+          enum: [pending, verified, distributed]
         createdAt:
           type: string
           format: date-time
@@ -669,8 +650,6 @@ components:
           type: integer
         verifiedTokens:
           type: integer
-        approvedTokens:
-          type: integer
         distributedTokens:
           type: integer
         todayTokens:
@@ -679,7 +658,6 @@ components:
         - totalTokens
         - pendingTokens
         - verifiedTokens
-        - approvedTokens
         - distributedTokens
         - todayTokens
 

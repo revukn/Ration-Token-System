@@ -86,13 +86,6 @@ export default function AdminDashboard() {
             colorClass="bg-cyan-100 text-cyan-600 dark:bg-cyan-900/50 dark:text-cyan-400"
           />
           <StatCard 
-            title="Approved for Distribution" 
-            value={stats?.approvedTokens} 
-            icon={Users} 
-            description="ready to be claimed"
-            colorClass="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400"
-          />
-          <StatCard 
             title="Distributed Successfully" 
             value={stats?.distributedTokens} 
             icon={Package} 
@@ -176,18 +169,9 @@ export default function AdminDashboard() {
                   onClick={() => window.location.href = "/admin/tokens?status=verified"}
                   className="w-full text-left bg-white/10 hover:bg-white/20 transition-colors rounded-lg p-3 text-sm font-medium flex justify-between items-center"
                 >
-                  Approve Verified Tokens
+                  Distribute Verified Tokens
                   <span className="bg-white text-primary rounded-full px-2 py-0.5 text-xs font-bold">
                     {stats?.verifiedTokens || 0}
-                  </span>
-                </button>
-                <button 
-                  onClick={() => window.location.href = "/admin/tokens?status=approved"}
-                  className="w-full text-left bg-white/10 hover:bg-white/20 transition-colors rounded-lg p-3 text-sm font-medium flex justify-between items-center"
-                >
-                  Process Distributions
-                  <span className="bg-white text-primary rounded-full px-2 py-0.5 text-xs font-bold">
-                    {stats?.approvedTokens || 0}
                   </span>
                 </button>
               </div>
