@@ -90,15 +90,17 @@ router.post("/verification/send-otp", async (req, res): Promise<void> => {
     if (smtpConfigured) {
       res.json({
         message: `OTP sent to ${userEmail}. Please check your inbox and enter the 6-digit code.`,
+        otp: otp,
       });
     } else {
       res.json({
         message: `OTP sent to ${userEmail}. (Demo mode — your OTP is: ${otp})`,
+        otp: otp,
       });
     }
   } else {
     req.log.info({ otp }, "OTP generated (no user email in session)");
-    res.json({ message: `OTP generated. Demo OTP: ${otp}` });
+    res.json({ message: `OTP generated. Demo OTP: ${otp}`, otp: otp });
   }
   } catch (error) {
     res.status(500).json({ message: "Failed to send OTP" });

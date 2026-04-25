@@ -123,7 +123,7 @@ export default function Verify() {
       {
         onSuccess: (data) => {
           setOtpSent(true);
-          toast({ title: "OTP Sent", description: data.message });
+          toast({ title: "OTP Sent", description: "OTP sent successfully to your email. Please check your inbox." });
         },
         onError: (err: any) => {
           const errorMessage = err.message || "Unable to send OTP. Please check your connection and try again.";
