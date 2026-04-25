@@ -4,7 +4,6 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { 
   useGetAllTokens, 
   useVerifyToken, 
-  useApproveToken, 
   useDistributeToken,
   getGetAllTokensQueryKey,
   getGetAdminDashboardStatsQueryKey,
@@ -63,6 +62,7 @@ export default function AdminTokens() {
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [last4Digits, setLast4Digits] = useState("");
+  const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -75,10 +75,9 @@ export default function AdminTokens() {
   const { data: tokens, isLoading } = useGetAllTokens(queryParams);
   
   const verifyMutation = useVerifyToken();
-  const approveMutation = useApproveToken();
   const distributeMutation = useDistributeToken();
 
-  const handleAction = (action: 'verify' | 'approve' | 'distribute', id: number) => {
+  const handleAction = (action: 'verify' | 'distribute', id: number) => {
     if (action === 'verify') {
       // Find the token to get its number for validation
       const token = tokens?.find(t => t.id === id);
@@ -90,7 +89,8 @@ export default function AdminTokens() {
       return;
     }
     
-    const mutation = action === 'approve' ? approveMutation : distributeMutation;
+    // Only distribute action remains
+    const mutation = distributeMutation;
     
     mutation.mutate(
       { tokenId: id },
@@ -168,6 +168,68 @@ export default function AdminTokens() {
     );
   };
 
+  const handleBulkDistribute = async () => {
+    if (selectedTokens.length === 0) {
+      toast({
+        title: "No Tokens Selected",
+        description: "Please select at least one token to distribute.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/tokens/bulk-distribute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tokenIds: selectedTokens }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to distribute tokens');
+      }
+
+      const result = await response.json();
+      
+      toast({
+        title: "Bulk Distribution Successful",
+        description: result.message || `Successfully distributed ${selectedTokens.length} tokens`,
+      });
+
+      setSelectedTokens([]);
+      queryClient.invalidateQueries({ queryKey: getGetAllTokensQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetAdminDashboardStatsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetRecentActivityQueryKey() });
+    } catch (error) {
+      toast({
+        title: "Bulk Distribution Failed",
+        description: "Unable to distribute selected tokens. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleTokenSelection = (tokenId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTokens(prev => [...prev, tokenId]);
+    } else {
+      setSelectedTokens(prev => prev.filter(id => id !== tokenId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const verifiedTokenIds = tokens
+        ?.filter(token => token.status === "verified")
+        .map(token => token.id.toString()) || [];
+      setSelectedTokens(verifiedTokenIds);
+    } else {
+      setSelectedTokens([]);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -198,7 +260,6 @@ export default function AdminTokens() {
                 <TabsTrigger value="all" className="data-[state=active]:bg-background border px-4 py-2">All Tokens</TabsTrigger>
                 <TabsTrigger value="pending" className="data-[state=active]:bg-background border px-4 py-2">Pending</TabsTrigger>
                 <TabsTrigger value="verified" className="data-[state=active]:bg-background border px-4 py-2">Verified</TabsTrigger>
-                <TabsTrigger value="approved" className="data-[state=active]:bg-background border px-4 py-2">Approved</TabsTrigger>
                 <TabsTrigger value="distributed" className="data-[state=active]:bg-background border px-4 py-2">Distributed</TabsTrigger>
               </TabsList>
             </Tabs>
@@ -218,10 +279,36 @@ export default function AdminTokens() {
                 />
               </div>
             ) : (
-              <div className="relative overflow-x-auto">
-                <Table>
+              <>
+                {statusFilter === "verified" && selectedTokens.length > 0 && (
+                  <div className="mb-4 p-3 bg-muted/50 rounded-lg border flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {selectedTokens.length} token{selectedTokens.length > 1 ? 's' : ''} selected
+                    </span>
+                    <Button
+                      onClick={handleBulkDistribute}
+                      className="gap-2"
+                      size="sm"
+                    >
+                      <Package className="h-4 w-4" />
+                      Distribute Selected
+                    </Button>
+                  </div>
+                )}
+                <div className="relative overflow-x-auto">
+                  <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableRow>
+                      {statusFilter === "verified" && (
+                        <TableHead className="font-semibold text-foreground w-12">
+                          <input
+                            type="checkbox"
+                            checked={selectedTokens.length === tokens?.filter(t => t.status === "verified").length}
+                            onChange={(e) => handleSelectAll(e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                        </TableHead>
+                      )}
                       <TableHead className="font-semibold text-foreground">Token Number</TableHead>
                       <TableHead className="font-semibold text-foreground">Ration Card</TableHead>
                       <TableHead className="font-semibold text-foreground">Holder</TableHead>
@@ -234,6 +321,16 @@ export default function AdminTokens() {
                   <TableBody>
                     {tokens.map((token) => (
                       <TableRow key={token.id}>
+                        {statusFilter === "verified" && (
+                          <TableCell>
+                            <input
+                              type="checkbox"
+                              checked={selectedTokens.includes(token.id.toString())}
+                              onChange={(e) => handleTokenSelection(token.id.toString(), e.target.checked)}
+                              className="rounded border-gray-300"
+                            />
+                          </TableCell>
+                        )}
                         <TableCell className="font-mono text-xs font-semibold">
                           {token.tokenNumber}
                         </TableCell>
@@ -272,12 +369,6 @@ export default function AdminTokens() {
                               )}
                               
                               {token.status === "verified" && (
-                                <DropdownMenuItem onClick={() => handleAction('approve', token.id)}>
-                                  <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" /> Approve Token
-                                </DropdownMenuItem>
-                              )}
-                              
-                              {token.status === "approved" && (
                                 <DropdownMenuItem onClick={() => handleAction('distribute', token.id)}>
                                   <Package className="mr-2 h-4 w-4 text-purple-600" /> Mark Distributed
                                 </DropdownMenuItem>
@@ -295,7 +386,8 @@ export default function AdminTokens() {
                   </TableBody>
                 </Table>
               </div>
-            )}
+              )}
+            </>
           </CardContent>
         </Card>
       

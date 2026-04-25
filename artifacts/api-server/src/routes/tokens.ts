@@ -194,41 +194,6 @@ router.post("/admin/tokens/:tokenId/verify", async (req, res): Promise<void> => 
   }
 });
 
-router.post("/admin/tokens/:tokenId/approve", async (req, res): Promise<void> => {
-  const role = (req.session as any)?.role;
-  if (role !== "admin") {
-    res.status(403).json({ message: "Admin access required" });
-    return;
-  }
-
-  const tokenId = req.params.tokenId;
-
-  const token = await Token.findByIdAndUpdate(
-    tokenId,
-    { status: "approved", updatedAt: new Date() },
-    { new: true }
-  ).populate('userId', 'name email');
-
-  if (!token) {
-    res.status(404).json({ message: "Token not found" });
-    return;
-  }
-
-  res.json({
-    id: token._id.toString(),
-    tokenNumber: token.tokenNumber,
-    rationCardNumber: token.rationCardNumber,
-    holderName: token.holderName,
-    userName: (token.userId as any)?.name || "",
-    userEmail: (token.userId as any)?.email || "",
-    selectedMembers: token.selectedMembers,
-    verificationType: token.verificationType,
-    status: token.status,
-    createdAt: token.createdAt.toISOString(),
-    updatedAt: token.updatedAt.toISOString(),
-  });
-});
-
 router.post("/admin/tokens/:tokenId/distribute", async (req, res): Promise<void> => {
   const role = (req.session as any)?.role;
   if (role !== "admin") {
@@ -262,6 +227,41 @@ router.post("/admin/tokens/:tokenId/distribute", async (req, res): Promise<void>
     createdAt: token.createdAt.toISOString(),
     updatedAt: token.updatedAt.toISOString(),
   });
+});
+
+router.post("/admin/tokens/bulk-distribute", async (req, res): Promise<void> => {
+  const role = (req.session as any)?.role;
+  if (role !== "admin") {
+    res.status(403).json({ message: "Admin access required" });
+    return;
+  }
+
+  const { tokenIds } = req.body;
+
+  if (!tokenIds || !Array.isArray(tokenIds) || tokenIds.length === 0) {
+    res.status(400).json({ message: "Token IDs array is required" });
+    return;
+  }
+
+  try {
+    const tokens = await Token.updateMany(
+      { _id: { $in: tokenIds }, status: "verified" },
+      { status: "distributed", updatedAt: new Date() }
+    );
+
+    if (tokens.modifiedCount === 0) {
+      res.status(400).json({ message: "No verified tokens found to distribute" });
+      return;
+    }
+
+    res.json({
+      message: `Successfully distributed ${tokens.modifiedCount} tokens`,
+      distributedCount: tokens.modifiedCount
+    });
+  } catch (error) {
+    console.error("Bulk distribute error:", error);
+    res.status(500).json({ message: "Failed to distribute tokens" });
+  }
 });
 
 router.get("/admin/dashboard-stats", async (req, res): Promise<void> => {
