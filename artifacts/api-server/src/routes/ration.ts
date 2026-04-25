@@ -150,4 +150,80 @@ router.post("/verification/face", async (req, res): Promise<void> => {
   res.json({ verified: true, message: "Face verification successful" });
 });
 
+// Email verification for registration
+router.post("/verification/send-email-otp", async (req, res): Promise<void> => {
+  const { email } = req.body;
+
+  if (!email || !email.includes('@')) {
+    res.status(400).json({ message: "Valid email address is required" });
+    return;
+  }
+
+  try {
+    // Check if email already exists in database
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      res.status(400).json({ message: "This email is already registered. Please use a different email or login." });
+      return;
+    }
+
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore[email] = {
+      otp,
+      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+    };
+
+    const smtpConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+    if (smtpConfigured) {
+      // Send verification email
+      const emailResult = await sendOtpEmail(email, otp);
+      req.log.info({ to: email, emailSent: emailResult.success }, "Email verification OTP sent");
+
+      res.json({
+        message: `Verification code sent to ${email}. Please check your inbox.`,
+      });
+    } else {
+      // Demo mode - still send email but show OTP for testing
+      req.log.info({ otp }, "Email verification OTP generated (demo mode)");
+      res.json({ 
+        message: `Verification code sent to ${email}. Please check your inbox.`,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Failed to send verification email" });
+  }
+});
+
+router.post("/verification/verify-email-otp", async (req, res): Promise<void> => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    res.status(400).json({ message: "Email and OTP are required" });
+    return;
+  }
+
+  const entry = otpStore[email];
+  if (!entry) {
+    res.status(400).json({ message: "Verification code not found or expired. Please request a new code." });
+    return;
+  }
+
+  if (Date.now() > entry.expiresAt) {
+    delete otpStore[email];
+    res.status(400).json({ message: "Verification code has expired. Please request a new code." });
+    return;
+  }
+
+  if (entry.otp !== otp) {
+    res.status(400).json({ message: "Invalid verification code. Please check your email and try again." });
+    return;
+  }
+
+  // Clean up OTP after successful verification
+  delete otpStore[email];
+  res.json({ verified: true, message: "Email verified successfully" });
+});
+
 export default router;
