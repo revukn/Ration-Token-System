@@ -3,7 +3,7 @@ import { logger } from "./logger";
 import * as fs from "fs";
 import * as path from "path";
 
-const FACES_DIR = path.join(__dirname, "../data/faces");
+const FACES_DIR = path.join(__dirname, "../src/data/faces");
 
 function loadFaceData(rationCardNumber: string, memberName: string): string | null {
   try {
