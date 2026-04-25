@@ -386,67 +386,68 @@ export default function AdminTokens() {
                   </TableBody>
                 </Table>
               </div>
-              )}
-            </>
+              </>
+            )}
           </CardContent>
         </Card>
-      
-      {/* Verification Dialog */}
-      <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <div className="space-y-4">
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">Verify Token</h3>
-              <p className="text-sm text-muted-foreground">
-                Please enter the last 4 digits of the token number to verify
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Input
-                placeholder="Enter last 4 digits"
-                value={last4Digits}
-                onChange={(e) => {
-                  // Only allow numbers and limit to 4 digits
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                  setLast4Digits(value);
-                }}
-                maxLength={4}
-                className="text-center text-lg"
-                autoFocus
-              />
-            </div>
-            
-            <DialogFooter className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setVerificationDialogOpen(false);
-                  setSelectedTokenId(null);
-                  setLast4Digits("");
-                }}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleVerifyToken}
-                disabled={last4Digits.length !== 4 || verifyMutation.isPending}
-                className="flex-1"
-              >
-                {verifyMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  "Verify Token"
-                )}
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
+        <>
+          {/* Verification Dialog */}
+          <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <div className="space-y-4">
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-semibold">Verify Token</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Please enter the last 4 digits of the token number to verify
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Enter last 4 digits"
+                    value={last4Digits}
+                    onChange={(e) => {
+                      // Only allow numbers and limit to 4 digits
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      setLast4Digits(value);
+                    }}
+                    maxLength={4}
+                    className="text-center text-lg"
+                    autoFocus
+                  />
+                </div>
+                
+                <DialogFooter className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setVerificationDialogOpen(false);
+                      setSelectedTokenId(null);
+                      setLast4Digits("");
+                    }}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleVerifyToken}
+                    disabled={last4Digits.length !== 4 || verifyMutation.isPending}
+                    className="flex-1"
+                  >
+                    {verifyMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      "Verify Token"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
       </div>
     </AdminLayout>
   );
