@@ -1,5 +1,27 @@
 import { RationCard } from "@workspace/db";
 import { logger } from "./logger";
+import * as fs from "fs";
+import * as path from "path";
+
+const FACES_DIR = path.join(__dirname, "../data/faces");
+
+function loadFaceData(rationCardNumber: string, memberName: string): string | null {
+  try {
+    const firstName = memberName.trim().split(" ")[0];
+    const extensions = [".jpg", ".jpeg", ".png"];
+    for (const ext of extensions) {
+      const filePath = path.join(FACES_DIR, `${rationCardNumber}-${firstName}${ext}`);
+      if (fs.existsSync(filePath)) {
+        const imageBuffer = fs.readFileSync(filePath);
+        const mimeType = ext === ".png" ? "image/png" : "image/jpeg";
+        return `data:${mimeType};base64,${imageBuffer.toString("base64")}`;
+      }
+    }
+  } catch (err) {
+    logger.warn({ rationCardNumber, memberName, err }, "Could not load face data");
+  }
+  return null;
+}
 
 const sampleRationCards = [
   {
@@ -370,15 +392,22 @@ export async function seedRationCards() {
   try {
     logger.info("Starting ration card seeding...");
     
+    let faceCount = 0;
     for (const cardData of sampleRationCards) {
+      const membersWithFace = cardData.familyMembers.map((member) => {
+        const faceData = loadFaceData(cardData.rationCardNumber, member.name);
+        if (faceData) faceCount++;
+        return { ...member, faceData };
+      });
+      
       await RationCard.findOneAndUpdate(
         { rationCardNumber: cardData.rationCardNumber },
-        cardData,
+        { ...cardData, familyMembers: membersWithFace },
         { upsert: true, new: true }
       );
     }
     
-    logger.info(`Successfully seeded ${sampleRationCards.length} ration cards`);
+    logger.info(`Successfully seeded ${sampleRationCards.length} ration cards (${faceCount} members with face data)`);
   } catch (error) {
     logger.error("Error seeding ration cards:", error);
   }

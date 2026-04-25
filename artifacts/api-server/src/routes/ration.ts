@@ -26,7 +26,17 @@ router.post("/ration-cards/verify", async (req, res): Promise<void> => {
       return;
     }
 
-    res.json(card);
+    const cardObj = card.toObject();
+    const familyMembers = cardObj.familyMembers.map((m: any) => ({
+      name: m.name,
+      age: m.age,
+      relation: m.relation,
+      aadharCardNumber: m.aadharCardNumber,
+      _id: m._id,
+      hasFaceData: !!m.faceData,
+    }));
+
+    res.json({ ...cardObj, familyMembers });
   } catch (error) {
     res.status(500).json({ message: "Failed to verify ration card" });
   }
@@ -147,7 +157,35 @@ router.post("/verification/face", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json({ verified: true, message: "Face verification successful" });
+  try {
+    const card = await RationCard.findOne({
+      rationCardNumber: parsed.data.rationCardNumber,
+      isActive: true
+    });
+
+    if (!card) {
+      res.status(404).json({ verified: false, message: "Ration card not found." });
+      return;
+    }
+
+    const member = card.familyMembers.find(
+      (m: any) => m.name === parsed.data.memberName
+    );
+
+    if (!member) {
+      res.status(404).json({ verified: false, message: "Member not found on this ration card." });
+      return;
+    }
+
+    if (!member.faceData) {
+      res.status(400).json({ verified: false, message: "No reference face data available for this member. Please use OTP verification." });
+      return;
+    }
+
+    res.json({ verified: true, message: "Face captured successfully. Admin will verify your identity." });
+  } catch (error) {
+    res.status(500).json({ verified: false, message: "Face verification failed. Please try again." });
+  }
 });
 
 // Email verification for registration

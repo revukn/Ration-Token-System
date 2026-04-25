@@ -38,7 +38,7 @@ import {
   DialogContent,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, MoreVertical, CheckCircle2, Package, Shield, ExternalLink, Loader2 } from "lucide-react";
+import { Search, MoreVertical, CheckCircle2, Package, Shield, ExternalLink, Loader2, Camera } from "lucide-react";
 import { 
   Empty, 
   EmptyHeader, 
@@ -68,6 +68,9 @@ export default function AdminTokens() {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [last4Digits, setLast4Digits] = useState("");
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
+  const [faceDialogOpen, setFaceDialogOpen] = useState(false);
+  const [faceData, setFaceData] = useState<{ memberName: string; capturedFaceData: string; referenceFaceData: string | null } | null>(null);
+  const [faceLoading, setFaceLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -238,6 +241,23 @@ export default function AdminTokens() {
       setSelectedTokens(prev => [...prev, tokenId]);
     } else {
       setSelectedTokens(prev => prev.filter(id => id !== tokenId));
+    }
+  };
+
+  const handleViewFace = async (tokenId: string) => {
+    setFaceLoading(true);
+    setFaceDialogOpen(true);
+    setFaceData(null);
+    try {
+      const res = await fetch(`/api/admin/tokens/${tokenId}/face-comparison`);
+      if (!res.ok) throw new Error("Failed to load face data");
+      const data = await res.json();
+      setFaceData(data);
+    } catch {
+      toast({ title: "Failed to load face comparison data", variant: "destructive" });
+      setFaceDialogOpen(false);
+    } finally {
+      setFaceLoading(false);
     }
   };
 
@@ -417,6 +437,12 @@ export default function AdminTokens() {
                                 </DropdownMenuItem>
                               )}
                               
+                              {(token as any).hasCapturedFace && (
+                                <DropdownMenuItem onClick={() => handleViewFace(token.id.toString())}>
+                                  <Camera className="mr-2 h-4 w-4 text-blue-600" /> View Face Comparison
+                                </DropdownMenuItem>
+                              )}
+                              
                               <DropdownMenuSeparator />
                               <DropdownMenuItem>
                                 <ExternalLink className="mr-2 h-4 w-4" /> View Full Details
@@ -433,6 +459,51 @@ export default function AdminTokens() {
             )}
           </CardContent>
         </Card>
+        {/* Face Comparison Dialog */}
+        <Dialog open={faceDialogOpen} onOpenChange={setFaceDialogOpen}>
+          <DialogContent className="sm:max-w-2xl">
+            <div className="space-y-4">
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-semibold">Face Verification Comparison</h3>
+                {faceData && (
+                  <p className="text-sm text-muted-foreground">
+                    Member: <span className="font-medium">{faceData.memberName}</span>
+                  </p>
+                )}
+              </div>
+              
+              {faceLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : faceData ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2 text-center">
+                    <p className="text-sm font-medium text-muted-foreground">Reference (Stored)</p>
+                    <div className="border rounded-lg overflow-hidden bg-muted/50 aspect-square flex items-center justify-center">
+                      {faceData.referenceFaceData ? (
+                        <img src={faceData.referenceFaceData} alt="Reference face" className="w-full h-full object-cover" />
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No reference photo</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-center">
+                    <p className="text-sm font-medium text-muted-foreground">Captured (User)</p>
+                    <div className="border rounded-lg overflow-hidden bg-muted/50 aspect-square flex items-center justify-center">
+                      <img src={faceData.capturedFaceData} alt="Captured face" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setFaceDialogOpen(false)}>Close</Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <>
           {/* Verification Dialog */}
           <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>

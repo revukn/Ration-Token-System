@@ -65,9 +65,14 @@ export default function Dashboard() {
     }
     
     // Store selection in sessionStorage for next step
+    const membersWithFaceData = cardDetails?.familyMembers
+      .filter((m: any) => selectedMembers.includes(m.name) && m.hasFaceData)
+      .map((m: any) => m.name) || [];
+    
     sessionStorage.setItem("rationTokenFlow", JSON.stringify({
       rationCardNumber: currentUser?.rationCardNumber,
-      selectedMembers
+      selectedMembers,
+      membersWithFaceData,
     }));
     
     setIsDialogOpen(false);

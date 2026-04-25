@@ -7,7 +7,8 @@ const familyMemberSchema = new mongoose.Schema({
   name: { type: String, required: true },
   age: { type: Number, required: true },
   relation: { type: String, required: true },
-  aadharCardNumber: { type: String, required: true, minlength: 12, maxlength: 12 }
+  aadharCardNumber: { type: String, required: true, minlength: 12, maxlength: 12 },
+  faceData: { type: String, default: null }
 });
 
 const rationCardSchema = new mongoose.Schema({
@@ -31,7 +32,8 @@ export const insertRationCardSchema = z.object({
     name: z.string(),
     age: z.number(),
     relation: z.string(),
-    aadharCardNumber: z.string().length(12)
+    aadharCardNumber: z.string().length(12),
+    faceData: z.string().nullable().optional()
   })),
   address: z.string(),
   isActive: z.boolean().optional()

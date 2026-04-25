@@ -80,7 +80,9 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
         month: new Date().toLocaleString('default', { month: 'long' }),
         year: new Date().getFullYear(),
         shopName: user?.fairPriceShop || "FPS-001"
-      }
+      },
+      capturedFaceData: (req.body as any).capturedFaceData || null,
+      faceVerificationMember: (req.body as any).faceVerificationMember || null,
     });
 
   if (user) {
@@ -164,8 +166,46 @@ router.get("/admin/tokens", async (req, res): Promise<void> => {
       status: t.status,
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
+      hasCapturedFace: !!(t as any).capturedFaceData,
+      faceVerificationMember: (t as any).faceVerificationMember || null,
     })),
   );
+});
+
+// Get face comparison data for a specific token (admin only)
+router.get("/admin/tokens/:tokenId/face-comparison", async (req, res): Promise<void> => {
+  const role = (req.session as any)?.role;
+  if (role !== "admin") {
+    res.status(403).json({ message: "Admin access required" });
+    return;
+  }
+
+  try {
+    const token = await Token.findById(req.params.tokenId);
+    if (!token) {
+      res.status(404).json({ message: "Token not found" });
+      return;
+    }
+
+    if (!(token as any).capturedFaceData) {
+      res.status(404).json({ message: "No face data for this token" });
+      return;
+    }
+
+    // Get reference face from ration card
+    const card = await RationCard.findOne({ rationCardNumber: token.rationCardNumber });
+    const memberName = (token as any).faceVerificationMember;
+    const member = card?.familyMembers?.find((m: any) => m.name === memberName);
+
+    res.json({
+      tokenNumber: token.tokenNumber,
+      memberName,
+      capturedFaceData: (token as any).capturedFaceData,
+      referenceFaceData: member?.faceData || null,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get face comparison data" });
+  }
 });
 
 router.post("/admin/tokens/:tokenId/verify", async (req, res): Promise<void> => {

@@ -25,6 +25,8 @@ const tokenSchema = new mongoose.Schema({
     year: { type: Number, required: true },
     shopName: { type: String, required: true }
   },
+  capturedFaceData: { type: String, default: null },
+  faceVerificationMember: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

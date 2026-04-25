@@ -18,7 +18,7 @@ export default function Verify() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [flowData, setFlowData] = useState<{ rationCardNumber: string; selectedMembers: string[] } | null>(null);
+  const [flowData, setFlowData] = useState<{ rationCardNumber: string; selectedMembers: string[]; membersWithFaceData: string[] } | null>(null);
 
   const [aadhaarNumber, setAadhaarNumber] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -50,7 +50,10 @@ export default function Verify() {
     }
     const parsed = JSON.parse(data);
     setFlowData(parsed);
-    if (parsed.selectedMembers.length > 0) {
+    const faceMembers = parsed.membersWithFaceData || [];
+    if (faceMembers.length > 0) {
+      setFaceMemberName(faceMembers[0]);
+    } else if (parsed.selectedMembers.length > 0) {
       setFaceMemberName(parsed.selectedMembers[0]);
     }
   }, [setLocation]);
@@ -191,7 +194,8 @@ export default function Verify() {
           rationCardNumber: flowData!.rationCardNumber,
           selectedMembers: flowData!.selectedMembers,
           verificationType: verificationType,
-        },
+          ...(verificationType === "face" && capturedImage ? { capturedFaceData: capturedImage, faceVerificationMember: faceMemberName } : {}),
+        } as any,
       },
       {
         onSuccess: () => {
@@ -279,13 +283,15 @@ export default function Verify() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="otp" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsList className={`grid w-full mb-8 ${(flowData?.membersWithFaceData?.length || 0) > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 <TabsTrigger value="otp" className="flex items-center gap-2">
                   <Smartphone className="h-4 w-4" /> OTP Verification
                 </TabsTrigger>
-                <TabsTrigger value="face" className="flex items-center gap-2">
-                  <Camera className="h-4 w-4" /> Face Recognition
-                </TabsTrigger>
+                {(flowData?.membersWithFaceData?.length || 0) > 0 && (
+                  <TabsTrigger value="face" className="flex items-center gap-2">
+                    <Camera className="h-4 w-4" /> Face Recognition
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               {/* OTP Tab */}
@@ -363,7 +369,7 @@ export default function Verify() {
                     value={faceMemberName}
                     onChange={(e) => setFaceMemberName(e.target.value)}
                   >
-                    {flowData.selectedMembers.map((m) => (
+                    {(flowData.membersWithFaceData || []).map((m: string) => (
                       <option key={m} value={m}>{m}</option>
                     ))}
                   </select>
