@@ -39,7 +39,14 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Search, MoreVertical, CheckCircle2, Package, Shield, ExternalLink, Loader2 } from "lucide-react";
-import { Empty } from "@/components/ui/empty";
+import { 
+  Empty, 
+  EmptyHeader, 
+  EmptyMedia, 
+  EmptyTitle, 
+  EmptyDescription, 
+  EmptyContent 
+} from "@/components/ui/empty";
 
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
@@ -228,7 +235,6 @@ export default function AdminTokens() {
     }
   };
 
-  // Tokens are already filtered by the API, so no need to filter again
   const filteredTokens = tokens || [];
 
   return (
@@ -273,20 +279,30 @@ export default function AdminTokens() {
               </div>
             ) : !filteredTokens || filteredTokens.length === 0 ? (
               <div className="py-12">
-                <Empty
-                  icon={<Shield className="h-12 w-12 text-muted-foreground/50" />}
-                  title={
-                    statusFilter === "pending" ? "No pending tokens today" :
-                    statusFilter === "verified" ? "No verified tokens today" :
-                    "No tokens found"
-                  }
-                  description={
-                    search ? "Try adjusting your search criteria" :
-                    statusFilter === "pending" ? "All tokens have been verified" :
-                    statusFilter === "verified" ? "No tokens are ready for distribution" :
-                    "There are no tokens matching this status"
-                  }
-                />
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Shield className="h-12 w-12 text-muted-foreground/50" />
+                    </EmptyMedia>
+                    <EmptyTitle>
+                      {
+                        statusFilter === "pending" ? "No pending tokens today" :
+                        statusFilter === "verified" ? "No verified tokens today" :
+                        "No tokens found"
+                      }
+                    </EmptyTitle>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <EmptyDescription>
+                      {
+                        search ? "Try adjusting your search criteria" :
+                        statusFilter === "pending" ? "All tokens have been verified" :
+                        statusFilter === "verified" ? "No tokens are ready for distribution" :
+                        "There are no tokens matching this status"
+                      }
+                    </EmptyDescription>
+                  </EmptyContent>
+                </Empty>
               </div>
             ) : (
               <>
