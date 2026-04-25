@@ -271,11 +271,11 @@ router.post("/admin/tokens/bulk-distribute", async (req, res): Promise<void> => 
   }
 
   try {
-    // Get the tokens with user and ration card details before updating
+    // Get the tokens with user details before updating
     const tokensToDistribute = await Token.find({ 
       _id: { $in: tokenIds }, 
       status: "verified" 
-    }).populate('userId').populate('rationCardId');
+    }).populate('userId');
 
     if (tokensToDistribute.length === 0) {
       res.status(400).json({ message: "No verified tokens found to distribute" });
@@ -292,16 +292,28 @@ router.post("/admin/tokens/bulk-distribute", async (req, res): Promise<void> => 
     const emailPromises = tokensToDistribute.map(async (token) => {
       try {
         const user = token.userId as any;
-        const rationCard = token.rationCardId as any;
         
-        if (user?.email && rationCard) {
+        req.log.info({ 
+          tokenNumber: token.tokenNumber, 
+          userEmail: user?.email, 
+          hasRationDetails: !!token.rationDetails,
+          rationCardNumber: token.rationCardNumber 
+        }, "Preparing to send distribution email");
+        
+        if (user?.email && token.rationDetails) {
           await sendRationDistributionEmail(user.email, {
-            rationCardNumber: rationCard.cardNumber,
-            cardType: rationCard.cardType,
-            familyMembers: rationCard.familyMembers,
-            shopName: token.shopName || "Main Ration Center"
+            rationCardNumber: token.rationCardNumber,
+            cardType: token.rationDetails.cardType,
+            familyMembers: token.rationDetails.familyMembers,
+            shopName: token.rationDetails.shopName || "Main Ration Center"
           });
-          req.log.info({ userEmail: user.email, tokenNumber: token.tokenNumber }, "Distribution email sent");
+          req.log.info({ userEmail: user.email, tokenNumber: token.tokenNumber }, "Distribution email sent successfully");
+        } else {
+          req.log.warn({ 
+            tokenNumber: token.tokenNumber, 
+            userEmail: user?.email, 
+            hasRationDetails: !!token.rationDetails 
+          }, "Skipping email - missing user email or ration details");
         }
       } catch (emailError) {
         req.log.error({ emailError, tokenNumber: token.tokenNumber }, "Failed to send distribution email");
