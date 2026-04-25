@@ -283,17 +283,25 @@ router.post("/notify/send-bulk-email", async (req, res): Promise<void> => {
       "rationDetails.month": currentMonth,
       "rationDetails.year": currentYear
     }).select('userId');
-    const excludedUserIds = tokensWithVerifiedStatus.map(t => t.userId);
+    const excludedUserIds = tokensWithVerifiedStatus.map((t: any) => t.userId);
 
     // Get all registered users excluding admins and users with verified/distributed tokens
-    const users = await User.find({
+    const allNonAdminUsers = await User.find({
       email: { $exists: true, $ne: null },
       role: { $ne: "admin" },
-      _id: { $nin: excludedUserIds }
     }).select('firstName lastName email');
 
+    const users = allNonAdminUsers.filter(
+      (user) => !excludedUserIds.some((id: any) => id.toString() === user._id.toString())
+    );
+
     if (users.length === 0) {
-      res.status(404).json({ message: "No registered users found" });
+      res.status(404).json({ 
+        message: "No eligible users found",
+        totalRegistered: allNonAdminUsers.length,
+        excludedCount: excludedUserIds.length,
+        registeredEmails: allNonAdminUsers.map((u) => u.email),
+      });
       return;
     }
 
@@ -316,7 +324,9 @@ router.post("/notify/send-bulk-email", async (req, res): Promise<void> => {
         totalUsers: users.length,
         totalSent: notificationResult.totalSent,
         totalFailed: notificationResult.totalFailed,
-        collectionDate
+        collectionDate,
+        excludedCount: excludedUserIds.length,
+        sentToEmails: users.map((u) => u.email),
       });
     } else {
       req.log.error({ error: notificationResult.error }, "Failed to send bulk notification");
