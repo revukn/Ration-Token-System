@@ -314,13 +314,28 @@ router.get("/admin/recent-activity", async (req, res): Promise<void> => {
   };
 
   res.json(
-    tokens.map((t) => ({
-      id: t._id.toString(),
-      tokenNumber: t.tokenNumber,
-      action: activityMap[t.status] || t.status,
-      userName: (t.userId as any)?.name || "Unknown",
-      timestamp: t.updatedAt.toISOString(),
-    })),
+    tokens.map((t) => {
+      let userName = "Unknown";
+      
+      if (t.status === "pending") {
+        const user = (t.userId as any);
+        if (user && user.firstName && user.lastName) {
+          userName = `${user.firstName} ${user.lastName}`;
+        } else {
+          userName = t.holderName || "Unknown";
+        }
+      } else if (t.status === "verified" || t.status === "distributed") {
+        userName = "GovtAdmin";
+      }
+      
+      return {
+        id: t._id.toString(),
+        tokenNumber: t.tokenNumber,
+        action: activityMap[t.status] || t.status,
+        userName,
+        timestamp: t.updatedAt.toISOString(),
+      };
+    }),
   );
 });
 

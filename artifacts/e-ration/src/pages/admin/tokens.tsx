@@ -228,6 +228,16 @@ export default function AdminTokens() {
     }
   };
 
+  // Filter tokens based on status and search
+  const filteredTokens = tokens?.filter(token => {
+    const matchesStatus = statusFilter === "all" || token.status === statusFilter;
+    const matchesSearch = !search || 
+      token.tokenNumber.toLowerCase().includes(search.toLowerCase()) ||
+      token.rationCardNumber.toLowerCase().includes(search.toLowerCase()) ||
+      token.holderName.toLowerCase().includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  }) || [];
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -268,12 +278,21 @@ export default function AdminTokens() {
               <div className="p-8 flex justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : !tokens || tokens.length === 0 ? (
+            ) : !filteredTokens || filteredTokens.length === 0 ? (
               <div className="py-12">
                 <Empty
                   icon={<Shield className="h-12 w-12 text-muted-foreground/50" />}
-                  title="No tokens found"
-                  description={search ? "Try adjusting your search criteria" : "There are no tokens matching this status"}
+                  title={
+                    statusFilter === "pending" ? "No pending tokens today" :
+                    statusFilter === "verified" ? "No verified tokens today" :
+                    "No tokens found"
+                  }
+                  description={
+                    search ? "Try adjusting your search criteria" :
+                    statusFilter === "pending" ? "All tokens have been verified" :
+                    statusFilter === "verified" ? "No tokens are ready for distribution" :
+                    "There are no tokens matching this status"
+                  }
                 />
               </div>
             ) : (
@@ -317,7 +336,7 @@ export default function AdminTokens() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tokens.map((token) => (
+                    {filteredTokens.map((token) => (
                       <TableRow key={token.id}>
                         {statusFilter === "verified" && (
                           <TableCell>
