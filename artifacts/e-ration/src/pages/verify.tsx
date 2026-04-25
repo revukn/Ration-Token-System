@@ -10,8 +10,9 @@ import { useSendOtp, useVerifyOtp, useVerifyFace, useGenerateToken, getGetMyToke
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Camera, CheckCircle2, ShieldCheck, Smartphone, Ticket, Mail, RefreshCw, VideoOff, ArrowLeft } from "lucide-react";
+import { Camera, CheckCircle2, ShieldCheck, Smartphone, Ticket, Mail, RefreshCw, VideoOff, ArrowLeft, Loader2, XCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import * as faceapi from "face-api.js";
 
 export default function Verify() {
   const [, setLocation] = useLocation();
@@ -33,6 +34,13 @@ export default function Verify() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [faceMatchScore, setFaceMatchScore] = useState<number | null>(null);
+  const [faceMatchLoading, setFaceMatchLoading] = useState(false);
+  const [faceMatchError, setFaceMatchError] = useState<string | null>(null);
+  const MATCH_THRESHOLD = 0.6;
 
   const [isVerified, setIsVerified] = useState(false);
   const [verificationType, setVerificationType] = useState<"otp" | "face">("otp");
@@ -57,6 +65,91 @@ export default function Verify() {
       setFaceMemberName(parsed.selectedMembers[0]);
     }
   }, [setLocation]);
+
+  const loadModels = useCallback(async () => {
+    if (modelsLoaded || modelsLoading) return;
+    setModelsLoading(true);
+    try {
+      const MODEL_URL = "/models";
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+      ]);
+      setModelsLoaded(true);
+    } catch (err) {
+      console.error("Failed to load face models:", err);
+      toast({ title: "Model Load Failed", description: "Could not load face recognition models. Please refresh and try again.", variant: "destructive" });
+    } finally {
+      setModelsLoading(false);
+    }
+  }, [modelsLoaded, modelsLoading, toast]);
+
+  const compareFaces = useCallback(async (capturedBase64: string) => {
+    if (!flowData || !faceMemberName) return;
+    setFaceMatchLoading(true);
+    setFaceMatchScore(null);
+    setFaceMatchError(null);
+
+    try {
+      // Fetch reference face from backend
+      const res = await fetch(`/api/ration-cards/${encodeURIComponent(flowData.rationCardNumber)}/member-face/${encodeURIComponent(faceMemberName)}`);
+      if (!res.ok) throw new Error("Could not fetch reference face");
+      const { faceData: referenceFace } = await res.json();
+
+      // Create image elements from base64
+      const loadImage = (src: string): Promise<HTMLImageElement> =>
+        new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = src;
+        });
+
+      const [refImg, capImg] = await Promise.all([
+        loadImage(referenceFace),
+        loadImage(capturedBase64),
+      ]);
+
+      // Detect faces and get descriptors
+      const refDetection = await faceapi
+        .detectSingleFace(refImg)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      const capDetection = await faceapi
+        .detectSingleFace(capImg)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if (!refDetection) {
+        setFaceMatchError("Could not detect a face in the reference photo. Please contact admin.");
+        return;
+      }
+
+      if (!capDetection) {
+        setFaceMatchError("Could not detect a face in your captured photo. Please retake with better lighting.");
+        return;
+      }
+
+      // Compare: euclidean distance (lower = more similar, typically < 0.6 is a match)
+      const distance = faceapi.euclideanDistance(refDetection.descriptor, capDetection.descriptor);
+      const score = Math.max(0, Math.min(1, 1 - distance)); // Convert to 0-1 similarity
+      setFaceMatchScore(score);
+
+      if (distance < MATCH_THRESHOLD) {
+        toast({ title: "Face Matched!", description: `Identity confirmed with ${Math.round(score * 100)}% confidence.` });
+      } else {
+        setFaceMatchError(`Face does not match. Similarity: ${Math.round(score * 100)}%. Please try again or use OTP.`);
+      }
+    } catch (err) {
+      console.error("Face comparison error:", err);
+      setFaceMatchError("Face comparison failed. Please try again.");
+    } finally {
+      setFaceMatchLoading(false);
+    }
+  }, [flowData, faceMemberName, MATCH_THRESHOLD, toast]);
 
   useEffect(() => {
     if (cameraStream && videoRef.current) {
@@ -83,6 +176,10 @@ export default function Verify() {
   const startCamera = async () => {
     setCameraError(null);
     setCapturedImage(null);
+    setFaceMatchScore(null);
+    setFaceMatchError(null);
+    // Load models in parallel with camera start
+    loadModels();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
@@ -114,6 +211,10 @@ export default function Verify() {
     setCapturedImage(imageData);
     stopCamera();
     setIsCapturing(false);
+    // Automatically start face comparison after capture
+    if (modelsLoaded) {
+      compareFaces(imageData);
+    }
   };
 
   const handleSendOtp = () => {
@@ -159,7 +260,13 @@ export default function Verify() {
   };
 
   const handleVerifyFace = () => {
-    if (!capturedImage) return;
+    if (!capturedImage || faceMatchScore === null) return;
+    // Only proceed if face matched above threshold
+    const distance = 1 - faceMatchScore;
+    if (distance >= MATCH_THRESHOLD) {
+      toast({ title: "Face Mismatch", description: "Your face does not match the reference. Please try again.", variant: "destructive" });
+      return;
+    }
     verifyFaceMutation.mutate(
       {
         data: {
@@ -173,7 +280,7 @@ export default function Verify() {
           if (res.verified) {
             setIsVerified(true);
             setVerificationType("face");
-            toast({ title: "Face Verification Successful", description: "Identity confirmed." });
+            toast({ title: "Face Verification Successful", description: `Identity confirmed with ${Math.round(faceMatchScore * 100)}% confidence.` });
           } else {
             toast({ title: "Verification Failed", description: res.message, variant: "destructive" });
             setCapturedImage(null);
@@ -380,19 +487,55 @@ export default function Verify() {
 
                 {capturedImage ? (
                   <div className="space-y-4 flex flex-col items-center">
-                    <div className="w-56 h-56 rounded-full overflow-hidden border-4 border-primary shadow-lg">
+                    <div className={`w-56 h-56 rounded-full overflow-hidden border-4 shadow-lg ${
+                      faceMatchLoading ? 'border-yellow-400 animate-pulse' :
+                      faceMatchError ? 'border-red-400' :
+                      faceMatchScore !== null && (1 - faceMatchScore) < MATCH_THRESHOLD ? 'border-green-400' :
+                      faceMatchScore !== null ? 'border-red-400' : 'border-primary'
+                    }`}>
                       <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
                     </div>
-                    <Alert className="bg-green-50 border-green-200 text-green-800">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <AlertDescription>Photo captured. Click Verify to confirm identity.</AlertDescription>
-                    </Alert>
+
+                    {faceMatchLoading && (
+                      <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <AlertDescription>Analyzing face... Please wait.</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {faceMatchError && (
+                      <Alert className="bg-red-50 border-red-200 text-red-800">
+                        <XCircle className="h-4 w-4" />
+                        <AlertDescription>{faceMatchError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {faceMatchScore !== null && !faceMatchError && (1 - faceMatchScore) < MATCH_THRESHOLD && (
+                      <Alert className="bg-green-50 border-green-200 text-green-800">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <AlertDescription>
+                          Face matched! Confidence: <span className="font-bold">{Math.round(faceMatchScore * 100)}%</span>. Click Verify to proceed.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {!modelsLoaded && !modelsLoading && (
+                      <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
+                        <Loader2 className="h-4 w-4" />
+                        <AlertDescription>Loading face recognition models...</AlertDescription>
+                      </Alert>
+                    )}
+
                     <div className="flex gap-3 w-full">
-                      <Button variant="outline" className="flex-1" onClick={() => { setCapturedImage(null); setCameraActive(false); }}>
+                      <Button variant="outline" className="flex-1" onClick={() => { setCapturedImage(null); setCameraActive(false); setFaceMatchScore(null); setFaceMatchError(null); }}>
                         Retake
                       </Button>
-                      <Button className="flex-1" onClick={handleVerifyFace} disabled={verifyFaceMutation.isPending}>
-                        {verifyFaceMutation.isPending ? "Verifying..." : "Verify Identity"}
+                      <Button
+                        className="flex-1"
+                        onClick={handleVerifyFace}
+                        disabled={verifyFaceMutation.isPending || faceMatchLoading || faceMatchScore === null || (1 - faceMatchScore) >= MATCH_THRESHOLD}
+                      >
+                        {verifyFaceMutation.isPending ? "Verifying..." : faceMatchLoading ? "Matching..." : "Verify Identity"}
                       </Button>
                     </div>
                   </div>

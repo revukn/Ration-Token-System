@@ -188,6 +188,39 @@ router.post("/verification/face", async (req, res): Promise<void> => {
   }
 });
 
+// Get reference face data for client-side face matching
+router.get("/ration-cards/:cardNumber/member-face/:memberName", async (req, res): Promise<void> => {
+  if (!(req.session as any)?.userId) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  try {
+    const card = await RationCard.findOne({
+      rationCardNumber: req.params.cardNumber,
+      isActive: true
+    });
+
+    if (!card) {
+      res.status(404).json({ message: "Ration card not found" });
+      return;
+    }
+
+    const member = card.familyMembers.find(
+      (m: any) => m.name === req.params.memberName
+    );
+
+    if (!member || !member.faceData) {
+      res.status(404).json({ message: "No face data for this member" });
+      return;
+    }
+
+    res.json({ faceData: member.faceData });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get face data" });
+  }
+});
+
 // Email verification for registration
 router.post("/verification/send-email-otp", async (req, res): Promise<void> => {
   const { email } = req.body;
