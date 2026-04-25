@@ -17,6 +17,12 @@ const userSchema = new mongoose.Schema({
     default: 'BPL'
   },
   fairPriceShop: { type: String, default: "FPS-001" },
+  familyMemberDetails: [{ 
+    name: { type: String, required: true },
+    age: { type: Number, required: true },
+    relation: { type: String, required: true }, // e.g., "Father", "Mother", "Son", "Daughter"
+    isPrimary: { type: Boolean, default: false } // Mark primary card holder
+  }],
   role: { type: String, enum: userRoleEnum, default: "user" },
   createdAt: { type: Date, default: Date.now }
 });
@@ -31,6 +37,12 @@ export const insertUserSchema = z.object({
   rationCardNumber: z.string(),
   rationCardType: z.enum(rationCardTypeEnum).optional(),
   fairPriceShop: z.string().optional(),
+  familyMemberDetails: z.array(z.object({
+    name: z.string(),
+    age: z.number(),
+    relation: z.string(),
+    isPrimary: z.boolean().optional()
+  })).optional(),
   role: z.enum(userRoleEnum).optional()
 });
 

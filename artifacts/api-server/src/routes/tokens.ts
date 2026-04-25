@@ -59,28 +59,28 @@ router.post("/tokens/generate", async (req, res): Promise<void> => {
     // Get user details for ration calculation
     const user = await User.findById(userId);
     const cardType = user?.rationCardType || 'BPL';
-    const familyMembers = parsed.data.selectedMembers.length;
+    const familyMembers = user?.familyMemberDetails?.length || 1;
     
     // Calculate ration entitlement
     const entitlement = getRationEntitlement(cardType, familyMembers);
     
     const token = await Token.create({
-    tokenNumber,
-    rationCardNumber: parsed.data.rationCardNumber,
-    holderName: parsed.data.selectedMembers[0] || "Unknown",
-    selectedMembers: parsed.data.selectedMembers,
-    verificationType: parsed.data.verificationType,
-    status: "pending",
-    userId,
-    rationDetails: {
-      cardType,
-      familyMembers,
-      entitlement,
-      month: new Date().toLocaleString('default', { month: 'long' }),
-      year: new Date().getFullYear(),
-      shopName: user?.fairPriceShop || "FPS-001"
-    }
-  });
+      tokenNumber,
+      rationCardNumber: parsed.data.rationCardNumber,
+      holderName: parsed.data.selectedMembers[0] || "Unknown",
+      selectedMembers: parsed.data.selectedMembers,
+      verificationType: parsed.data.verificationType,
+      status: "pending",
+      userId,
+      rationDetails: {
+        cardType,
+        familyMembers,
+        entitlement,
+        month: new Date().toLocaleString('default', { month: 'long' }),
+        year: new Date().getFullYear(),
+        shopName: user?.fairPriceShop || "FPS-001"
+      }
+    });
 
   if (user) {
     sendTokenConfirmationEmail(
