@@ -157,3 +157,158 @@ export async function sendTokenConfirmationEmail(
     return { success: false };
   }
 }
+
+export async function sendRationDistributionEmail(
+  toEmail: string,
+  rationDetails: {
+    rationCardNumber: string;
+    cardType: string;
+    familyMembers: number;
+    shopName: string;
+  }
+) {
+  try {
+    const transport = await getTransporter();
+    
+    // Generate the ration message using the existing function
+    const { generateRationMessage } = await import('../services/rationService');
+    const messageBody = generateRationMessage(
+      rationDetails.rationCardNumber,
+      rationDetails.cardType,
+      rationDetails.familyMembers,
+      rationDetails.shopName
+    );
+
+    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    
+    const info = await transport.sendMail({
+      from: `"E-Ration Token System" <noreply@eration.karnataka.gov.in>`,
+      to: toEmail,
+      subject: `Your Ration for ${currentMonth} is Distributed Successfully`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; border: 1px solid #dee2e6;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #2c3e50; margin: 0;">🏛️ Food & Civil Supplies Karnataka</h1>
+            <h2 style="color: #27ae60; margin: 10px 0;">Ration Distribution Confirmation</h2>
+          </div>
+          
+          <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="color: #2c3e50; margin-top: 0;">Dear Beneficiary,</h3>
+            <p style="color: #555; line-height: 1.6;">Your ration for this month has been successfully distributed. Below are the details:</p>
+          </div>
+          
+          <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #27ae60;">
+            <pre style="white-space: pre-wrap; font-family: monospace; margin: 0; color: #2c3e50;">${messageBody}</pre>
+          </div>
+          
+          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+            <h4 style="color: #856404; margin-top: 0;">Important Information:</h4>
+            <ul style="color: #856404; margin: 10px 0; padding-left: 20px;">
+              <li>Please collect your ration within the specified time</li>
+              <li>Bring your ration card and original ID proof</li>
+              <li>Report any issues immediately to the helpline</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; color: #6c757d; font-size: 12px; margin-top: 20px;">
+            <p>This is an automated message from the Public Distribution System.</p>
+            <p>For complaints: 1967, 1800-425-6900 | 🏪 FCSKAR</p>
+          </div>
+        </div>
+      `,
+    });
+    
+    logger.info({ to: toEmail, messageId: info.messageId }, "Ration distribution email sent");
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    logger.error({ err, to: toEmail }, "Failed to send ration distribution email");
+    return { success: false, error: err.message };
+  }
+}
+
+export async function sendBulkRationCollectionNotification(
+  users: Array<{ email: string; name: string }>,
+  collectionDate: string
+) {
+  try {
+    const transport = await getTransporter();
+    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    const formattedDate = new Date(collectionDate).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+
+    const emailTemplate = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; border: 1px solid #dee2e6;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #2c3e50; margin: 0;">🏛️ Food & Civil Supplies Karnataka</h1>
+          <h2 style="color: #e74c3c; margin: 10px 0;">Ration Collection Reminder</h2>
+        </div>
+        
+        <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <h3 style="color: #2c3e50; margin-top: 0;">Dear Beneficiaries,</h3>
+          <p style="color: #555; line-height: 1.6;">Please generate token if not done already. If you already have generated token, come to your nearby ration center and collect ration on this date (${formattedDate}).</p>
+        </div>
+        
+        <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+          <h4 style="color: #856404; margin-top: 0;">📅 Collection Details:</h4>
+          <ul style="color: #856404; margin: 10px 0; padding-left: 20px;">
+            <li><strong>Date:</strong> ${formattedDate}</li>
+            <li><strong>Action Required:</strong> Generate token (if not done)</li>
+            <li><strong>Location:</strong> Your nearby ration center</li>
+            <li><strong>Documents:</strong> Bring ration card and ID proof</li>
+          </ul>
+        </div>
+
+        <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #27ae60;">
+          <h4 style="color: #27ae60; margin-top: 0;">ಕನ್ನಡದಲ್ಲಿ / In Kannada:</h4>
+          <p style="color: #2c3e50; line-height: 1.6;">ಪ್ರಿಯ ಫಲಾನುಭವಿಗಳೇ, ದಯವಿಟ್ಟು ಟೋಕನ್ ಅನ್ನು ಜನರೇಟ್ ಮಾಡಿ ಇಲ್ಲದಿದ್ದರೆ, ನೀವು ಈಗಾಗಲೇ ಟೋಕನ್ ಅನ್ನು ಜನರೇಟ್ ಮಾಡಿದ್ದರೆ, ಈ ದಿನಾಂಕದಂದು (${formattedDate}) ನಿಮ್ಮ ಹತ್ತಿರದ ಪಡಿತರ ಕೇಂದ್ರಕ್ಕೆ ಬಂದು ಪಡಿತರವನ್ನು ಸಂಗ್ರಹಿಸಿ.</p>
+        </div>
+        
+        <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #dc3545;">
+          <h4 style="color: #721c24; margin-top: 0;">Important Instructions:</h4>
+          <ul style="color: #721c24; margin: 10px 0; padding-left: 20px;">
+            <li>Generate your token before visiting the center</li>
+            <li>Bring original ration card and ID proof</li>
+            <li>Report any issues to: 1967, 1800-425-6900</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; color: #6c757d; font-size: 12px; margin-top: 20px;">
+          <p>This is an automated reminder from the Public Distribution System.</p>
+          <p>For complaints: 1967, 1800-425-6900 | 🏪 FCSKAR</p>
+        </div>
+      </div>
+    `;
+
+    const results = [];
+    
+    for (const user of users) {
+      try {
+        const info = await transport.sendMail({
+          from: `"E-Ration Token System" <noreply@eration.karnataka.gov.in>`,
+          to: user.email,
+          subject: `Remember to Generate token and collect Ration for this month ${currentMonth}`,
+          html: emailTemplate.replace('Dear Beneficiaries,', `Dear ${user.name},`)
+        });
+        
+        results.push({ email: user.email, success: true, messageId: info.messageId });
+        logger.info({ to: user.email, messageId: info.messageId }, "Bulk ration reminder email sent");
+      } catch (error) {
+        results.push({ email: user.email, success: false, error: error.message });
+        logger.error({ error, to: user.email }, "Failed to send bulk ration reminder email");
+      }
+    }
+    
+    return { 
+      success: true, 
+      totalSent: results.filter(r => r.success).length,
+      totalFailed: results.filter(r => !r.success).length,
+      results 
+    };
+  } catch (err) {
+    logger.error({ err }, "Failed to send bulk ration collection notification");
+    return { success: false, error: err.message };
+  }
+}

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { LayoutDashboard, Users, Ticket, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Ticket, LogOut, Settings, Mail } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -71,6 +71,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           >
             <Ticket className="h-4 w-4" />
             Token Management
+          </Link>
+          <Link 
+            href="/admin/notify" 
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+              location === "/admin/notify" 
+                ? "bg-primary/10 text-primary" 
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <Mail className="h-4 w-4" />
+            Notify
           </Link>
         </nav>
 

@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { VerifyRationCardBody, SendOtpBody, VerifyOtpBody, VerifyFaceBody } from "@workspace/api-zod";
 import { User, RationCard } from "@workspace/db";
-import { sendOtpEmail } from "../lib/mailer";
+import { sendOtpEmail, sendRationDistributionEmail, sendBulkRationCollectionNotification } from "../lib/mailer";
 
 const router: IRouter = Router();
 
@@ -226,6 +226,99 @@ router.post("/verification/verify-email-otp", async (req, res): Promise<void> =>
   // Clean up OTP after successful verification
   delete otpStore[email];
   res.json({ verified: true, message: "Email verified successfully" });
+});
+
+// Send ration distribution email
+router.post("/distribution/send-email", async (req, res): Promise<void> => {
+  const { email, rationCardNumber, cardType, familyMembers, shopName } = req.body;
+
+  if (!email || !rationCardNumber || !cardType || !familyMembers || !shopName) {
+    res.status(400).json({ message: "All fields are required: email, rationCardNumber, cardType, familyMembers, shopName" });
+    return;
+  }
+
+  try {
+    // Send ration distribution email
+    const emailResult = await sendRationDistributionEmail(email, {
+      rationCardNumber,
+      cardType,
+      familyMembers,
+      shopName
+    });
+
+    if (emailResult.success) {
+      req.log.info({ to: email, rationCardNumber }, "Ration distribution email sent successfully");
+      res.json({
+        message: `Ration distribution details sent to ${email}`,
+        success: true
+      });
+    } else {
+      req.log.error({ to: email, error: emailResult.error }, "Failed to send ration distribution email");
+      res.status(500).json({ 
+        message: "Failed to send ration distribution email",
+        error: emailResult.error 
+      });
+    }
+  } catch (error) {
+    req.log.error({ error, to: email }, "Error sending ration distribution email");
+    res.status(500).json({ message: "Failed to send ration distribution email" });
+  }
+});
+
+// Send bulk ration collection notification
+router.post("/notify/send-bulk-email", async (req, res): Promise<void> => {
+  const { collectionDate } = req.body;
+
+  if (!collectionDate) {
+    res.status(400).json({ message: "Collection date is required" });
+    return;
+  }
+
+  try {
+    // Get all registered users (excluding those with verified tokens)
+    const users = await User.find({
+      email: { $exists: true, $ne: null },
+      // Add logic to exclude users with verified tokens if needed
+      // For now, we'll get all users with emails
+    }).select('name email');
+
+    if (users.length === 0) {
+      res.status(404).json({ message: "No registered users found" });
+      return;
+    }
+
+    // Send bulk notification
+    const notificationResult = await sendBulkRationCollectionNotification(
+      users.map(user => ({ email: user.email, name: user.name || 'Beneficiary' })),
+      collectionDate
+    );
+
+    if (notificationResult.success) {
+      req.log.info({ 
+        totalUsers: users.length, 
+        totalSent: notificationResult.totalSent,
+        totalFailed: notificationResult.totalFailed,
+        collectionDate 
+      }, "Bulk ration notification sent");
+
+      res.json({
+        message: `Notification sent to ${notificationResult.totalSent} users successfully`,
+        totalUsers: users.length,
+        totalSent: notificationResult.totalSent,
+        totalFailed: notificationResult.totalFailed,
+        collectionDate
+      });
+    } else {
+      req.log.error({ error: notificationResult.error }, "Failed to send bulk notification");
+      res.status(500).json({ 
+        message: "Failed to send bulk notification",
+        error: notificationResult.error 
+      });
+    }
+  } catch (error) {
+    req.log.error({ error, collectionDate }, "Error sending bulk ration notification");
+    res.status(500).json({ message: "Failed to send bulk notification" });
+  }
 });
 
 export default router;
