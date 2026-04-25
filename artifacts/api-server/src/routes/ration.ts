@@ -183,12 +183,14 @@ router.post("/verification/send-email-otp", async (req, res): Promise<void> => {
 
       res.json({
         message: `Verification code sent to ${email}. Please check your inbox.`,
+        otp: otp,
       });
     } else {
       // Demo mode - still send email but show OTP for testing
       req.log.info({ otp }, "Email verification OTP generated (demo mode)");
       res.json({ 
         message: `Verification code sent to ${email}. Please check your inbox.`,
+        otp: otp
       });
     }
   } catch (error) {
