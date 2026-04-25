@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { VerifyRationCardBody, SendOtpBody, VerifyOtpBody, VerifyFaceBody } from "@workspace/api-zod";
-import { User, RationCard } from "@workspace/db";
+import { User, RationCard, Token } from "@workspace/db";
 import { sendOtpEmail, sendRationDistributionEmail, sendBulkRationCollectionNotification } from "../lib/mailer";
 
 const router: IRouter = Router();
@@ -275,12 +275,22 @@ router.post("/notify/send-bulk-email", async (req, res): Promise<void> => {
   }
 
   try {
-    // Get all registered users (excluding those with verified tokens)
+    // Get user IDs who already have verified or distributed tokens (they already visited the store)
+    const currentMonth = new Date().toLocaleString('default', { month: 'long' });
+    const currentYear = new Date().getFullYear();
+    const tokensWithVerifiedStatus = await Token.find({
+      status: { $in: ["verified", "distributed"] },
+      "rationDetails.month": currentMonth,
+      "rationDetails.year": currentYear
+    }).select('userId');
+    const excludedUserIds = tokensWithVerifiedStatus.map(t => t.userId);
+
+    // Get all registered users excluding admins and users with verified/distributed tokens
     const users = await User.find({
       email: { $exists: true, $ne: null },
-      // Add logic to exclude users with verified tokens if needed
-      // For now, we'll get all users with emails
-    }).select('name email');
+      role: { $ne: "admin" },
+      _id: { $nin: excludedUserIds }
+    }).select('firstName lastName email');
 
     if (users.length === 0) {
       res.status(404).json({ message: "No registered users found" });
@@ -289,7 +299,7 @@ router.post("/notify/send-bulk-email", async (req, res): Promise<void> => {
 
     // Send bulk notification
     const notificationResult = await sendBulkRationCollectionNotification(
-      users.map(user => ({ email: user.email, name: user.name || 'Beneficiary' })),
+      users.map(user => ({ email: user.email, name: `${user.firstName} ${user.lastName}` || 'Beneficiary' })),
       collectionDate
     );
 

@@ -192,9 +192,15 @@ export async function sendRationDistributionEmail(
             <h2 style="color: #27ae60; margin: 10px 0;">Ration Distribution Confirmation</h2>
           </div>
           
+          <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 2px solid #27ae60;">
+            <h2 style="color: #155724; margin: 0 0 5px 0;">✅ Distribution Successful!</h2>
+            <p style="color: #155724; margin: 0; font-size: 16px;">Your ration for <strong>${currentMonth}</strong> has been distributed successfully.</p>
+            <p style="color: #155724; margin: 5px 0 0 0; font-size: 14px;">ನಿಮ್ಮ <strong>${currentMonth}</strong> ತಿಂಗಳ ಪಡಿತರವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ವಿತರಿಸಲಾಗಿದೆ.</p>
+          </div>
+
           <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="color: #2c3e50; margin-top: 0;">Dear Beneficiary,</h3>
-            <p style="color: #555; line-height: 1.6;">Your ration for this month has been successfully distributed. Below are the details:</p>
+            <p style="color: #555; line-height: 1.6;">Your ration for this month has been successfully distributed. Below are the details of the items distributed to you:</p>
           </div>
           
           <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #27ae60;">
