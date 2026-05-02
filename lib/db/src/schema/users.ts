@@ -24,6 +24,8 @@ const userSchema = new mongoose.Schema({
     isPrimary: { type: Boolean, default: false } 
   }],
   role: { type: String, enum: userRoleEnum, default: "user" },
+  resetOtp: { type: String, default: null },
+  resetOtpExpiry: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

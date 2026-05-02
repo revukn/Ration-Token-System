@@ -13,6 +13,7 @@ import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminTokens from "@/pages/admin/tokens";
 import AdminNotify from "@/pages/admin/notify";
+import ForgotPassword from "@/pages/forgot-password";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/verify" component={Verify} />
       <Route path="/my-tokens" component={MyTokens} />

@@ -149,6 +149,15 @@ router.get("/admin/tokens", async (req, res): Promise<void> => {
 
   let query: any = { status: params.success && params.data.status ? params.data.status : { $exists: true } };
 
+  if (params.success && params.data.search) {
+    const searchRegex = new RegExp(params.data.search, "i");
+    query.$or = [
+      { tokenNumber: searchRegex },
+      { rationCardNumber: searchRegex },
+      { holderName: searchRegex },
+    ];
+  }
+
   const tokens = await Token.find(query)
     .populate('userId', 'name email')
     .sort({ createdAt: -1 });
