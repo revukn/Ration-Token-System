@@ -86,10 +86,10 @@ const sampleRationCards = [
     holderName: "Sanjana s",
     cardType: "PHH",
     familyMembers: [
-      { name: "Sanjana s", age: 21, relation: "Self", aadharCardNumber: "666677778888" },
-      { name: "swetha", age: 45, relation: "mother", aadharCardNumber: "999900001111" },
-      { name: "kumar", age: 15, relation: "father", aadharCardNumber: "222233338888" },
-      { name: "hemashree", age: 8, relation: "sister", aadharCardNumber: "444455559999" }
+      { name: "Sanjana", age: 21, relation: "Self", aadharCardNumber: "666677778888" },
+      { name: "shwetha", age: 35, relation: "mother", aadharCardNumber: "999900001111" },
+      { name: "shivakumar", age: 40, relation: "father", aadharCardNumber: "222233338888" },
+      { name: "hemashree", age: 18, relation: "sister", aadharCardNumber: "444455559999" }
     ],
     address: "987 Cedar Ln, Mysore - 570002"
   },
