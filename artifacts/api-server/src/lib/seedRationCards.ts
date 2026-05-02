@@ -385,6 +385,16 @@ const sampleRationCards = [
       { name: "Rohan Ajay", age: 14, relation: "Son", aadharCardNumber: "123456782345" }
     ],
     address: "224 Oak Ave, Mysore - 570010"
+  },
+   {
+    rationCardNumber: "KA-MND-2026-100",
+    holderName: "PavithraR",
+    cardType: "BPL",
+    familyMembers: [
+      { name: "PavithraR", age: 21, relation: "Self", aadharCardNumber: "123456778901" },
+      { name: "Kavya", age: 19, relation: "Sister", aadharCardNumber: "123456788012" }
+    ],
+    address: "9th Cross VV Nagar, Mandya - 571401"
   }
 ];
 
