@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RationCardSearch } from "@/components/ui/ration-card-search";
 import {
   InputOTP,
   InputOTPGroup,
@@ -38,6 +39,7 @@ export default function ForgotPassword() {
   const [step, setStep] = useState<Step>("email");
   const [rationCardNumber, setRationCardNumber] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
+  const [rationCardValid, setRationCardValid] = useState(false);
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -53,10 +55,10 @@ export default function ForgotPassword() {
   }, [countdown]);
 
   const handleSendOtp = async () => {
-    if (!rationCardNumber.trim()) {
+    if (!rationCardNumber.trim() || !rationCardValid) {
       toast({
-        title: "Required",
-        description: "Please enter your ration card number",
+        title: "Invalid Ration Card",
+        description: "Please select a valid ration card number from the list",
         variant: "destructive",
       });
       return;
@@ -276,18 +278,16 @@ export default function ForgotPassword() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="rationCardNumber">Ration Card Number</Label>
-                  <Input
-                    id="rationCardNumber"
-                    placeholder="e.g. KA-BNG-2024-001"
+                  <RationCardSearch
                     value={rationCardNumber}
-                    onChange={(e) => setRationCardNumber(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
+                    onChange={setRationCardNumber}
+                    onValidation={(valid, message) => setRationCardValid(valid)}
                   />
                 </div>
                 <Button
                   className="w-full"
                   onClick={handleSendOtp}
-                  disabled={loading || !rationCardNumber.trim()}
+                  disabled={loading || !rationCardNumber.trim() || !rationCardValid}
                 >
                   {loading ? (
                     <>
