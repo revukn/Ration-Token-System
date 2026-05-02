@@ -84,7 +84,7 @@ export default function ForgotPassword() {
 
       setMaskedEmail(data.email || "");
       setStep("otp");
-      setCountdown(300);
+      setCountdown(30);
       toast({ title: "OTP Sent", description: data.message });
     } catch {
       toast({
@@ -337,9 +337,7 @@ export default function ForgotPassword() {
                     {countdown > 0 ? (
                       <p className="text-sm text-muted-foreground">
                         Resend OTP in{" "}
-                        <span className="font-semibold text-primary">
-                          {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}
-                        </span>
+                        <span className="font-semibold text-primary">{countdown}s</span>
                       </p>
                     ) : (
                       <button
@@ -398,6 +396,7 @@ export default function ForgotPassword() {
                       placeholder="Enter new password (min 6 chars)"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      className="pr-10"
                     />
                     <button
                       type="button"
@@ -413,7 +412,7 @@ export default function ForgotPassword() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 mt-6">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <div className="relative">
                     <Input
@@ -423,6 +422,7 @@ export default function ForgotPassword() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
+                      className="pr-10"
                     />
                     <button
                       type="button"
