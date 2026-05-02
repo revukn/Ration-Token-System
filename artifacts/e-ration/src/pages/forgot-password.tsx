@@ -282,6 +282,7 @@ export default function ForgotPassword() {
                     value={rationCardNumber}
                     onChange={setRationCardNumber}
                     onValidation={(valid, message) => setRationCardValid(valid)}
+                    allowRegistered={true}
                   />
                 </div>
                 <Button
